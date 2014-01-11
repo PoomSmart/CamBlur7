@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>title</key>
+    <string>CamBlur7</string>
+    <key>entry</key>
+    <dict>
+      <key>cell</key>
+      <string>PSLinkCell</string>
+      <key>icon</key>
+      <string>CamBlur7.png</string>
+      <key>label</key>
+      <string>CamBlur7</string>
+    </dict>
+    <key>items</key>
+    <array>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+      	<string>Blur Effect</string>
+        <key>footerText</key>
+        <string>This tweak blurs a camera top bar and bottom bar.
+If you have TransparentCameraBar tweak installed and the Camera Buttom Bar Opacity option is enabled, the bottom bar won't blurred, you have to disable that option first.</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>blur</string>
+        <key>label</key>
+        <string>Enabled</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+      	<string>Blur Radius</string>
+        <key>footerText</key>
+        <string>Set the blur amount. (0.0 - 100.0)</string>
+      </dict>
+      <dict>
+			<key>PostNotification</key>
+			<string>com.PS.CamBlur7.prefs</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>20.0</real>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>key</key>
+			<string>blurAmount</string>
+			<key>max</key>
+			<real>100.0</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>showValue</key>
+			<true/>
+		</dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>footerText</key>
+        <string>© 2013 - 2014 Thuchapol Unprasert
+(@PoomSmart)</string>
+      </dict>
+    </array>
+  </dict>
+</plist>
