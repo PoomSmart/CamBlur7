@@ -2,9 +2,15 @@
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
 #define PreferencesChangedNotification "com.PS.CamBlur7.prefs"
+#define IPAD (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+#define PH_BAR_HEIGHT 90
 
 static BOOL pf = NO;
+
 static BOOL blur;
+static BOOL handleEffectiPhone;
+static BOOL handleVideoTB;
+static BOOL handleVideoBB;
 static float blurAmount;
 
 @interface CAMTopBar : UIView
@@ -34,6 +40,9 @@ static void CB7Loader()
 {
 	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
 	blur = [dict objectForKey:@"blur"] ? [[dict objectForKey:@"blur"] boolValue] : YES;
+	handleEffectiPhone = [dict objectForKey:@"handleEffectiPhone"] ? [[dict objectForKey:@"handleEffectiPhone"] boolValue] : YES;
+	handleVideoTB = [dict objectForKey:@"handleVideoTB"] ? [[dict objectForKey:@"handleVideoTB"] boolValue] : YES;
+	handleVideoBB = [dict objectForKey:@"handleVideoBB"] ? [[dict objectForKey:@"handleVideoBB"] boolValue] : YES;
 	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
 }
 
@@ -85,7 +94,7 @@ static void releaseBlurBar2()
 	%orig;
 	if (pf) {
 		CGSize size = blurBar.frame.size;
-		CGRect frame = CGRectMake(0, 0, size.width, device == 0 ? 90 : 40);
+		CGRect frame = CGRectMake(0, 0, size.width, device == 0 ? PH_BAR_HEIGHT : 40);
 		[[self delegate]._topBar updateSize:frame];
 	}
 }
@@ -111,7 +120,7 @@ static void releaseBlurBar2()
 		pf = YES;
 	if (blurBar == nil) {
 		CGSize size = [self sizeThatFits:CGSizeZero];
-		CGRect frame = CGRectMake(0, 0, size.width, pf ? 90 : size.height);
+		CGRect frame = CGRectMake(0, 0, size.width, pf ? PH_BAR_HEIGHT : size.height);
 		UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
 		createBlurBarWithFrame(frame);
 		[backgroundView addSubview:blurBar];
@@ -165,6 +174,35 @@ static void releaseBlurBar2()
 {
 	releaseBlurBar2();
 	%orig;
+}
+
+%end
+
+%hook PLCameraView
+
+- (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
+{
+	if (handleVideoTB)
+		blurBar.hidden = YES;
+	if (handleVideoBB)
+		blurBar2.hidden = YES;
+	%orig;
+}
+
+- (void)cameraControllerDidStopVideoCapture:(id)cameraController
+{
+	%orig;
+	if (handleVideoTB)
+		blurBar.hidden = NO;
+	if (handleVideoBB)
+		blurBar2.hidden = NO;
+}
+
+- (void)cameraController:(id)controller didStartTransitionToShowEffectsGrid:(BOOL)showEffectsGrid animated:(BOOL)animated
+{
+	%orig;
+	if (!IPAD && handleEffectiPhone)
+		blurBar2.hidden = showEffectsGrid;
 }
 
 %end

@@ -22,7 +22,11 @@
       	<string>Blur Effect</string>
         <key>footerText</key>
         <string>This tweak blurs a camera top bar and bottom bar.
-If you have TransparentCameraBar tweak installed and the Camera Buttom Bar Opacity option is enabled, the bottom bar won't blurred, you have to disable that option first.</string>
+Hide in effects view - Hide blur effect of the bar(s) when the effects view is active.
+Hide in video - Hide blur effect of the bar(s) when recording video.
+TB = Top Bar, BB = Bottom Bar
+
+Note: you need to enable "Full-screen Preview" option and "Camera Bottom Bar Opacity" not less than 1.0 for TransparentCameraBar tweak settings, to make CamBlur7 works properly.</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -40,11 +44,53 @@ If you have TransparentCameraBar tweak installed and the Camera Buttom Bar Opaci
       </dict>
       <dict>
         <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>handleEffectiPhone</string>
+        <key>label</key>
+        <string>Hide in effects view</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>handleVideoTB</string>
+        <key>label</key>
+        <string>Hide in video (TB)</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>handleVideoBB</string>
+        <key>label</key>
+        <string>Hide in video (BB)</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
         <string>PSGroupCell</string>
         <key>label</key>
       	<string>Blur Radius</string>
         <key>footerText</key>
-        <string>Set the blur amount. (0.0 - 100.0)</string>
+        <string>Set blur amount. (value from 0.0 to 100.0)</string>
       </dict>
       <dict>
 			<key>PostNotification</key>

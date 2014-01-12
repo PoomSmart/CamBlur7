@@ -1,6 +1,6 @@
 Package: org.thebigboss.camblur7
 Name: CamBlur7
-Depends: mobilesubstrate, preferenceloader, firmware (>= 7.0), gsc.still-camera | gsc.front-facing-camera
+Depends: mobilesubstrate, preferenceloader, org.thebigboss.transparentcamerabar, firmware (>= 7.0), gsc.still-camera | gsc.front-facing-camera
 Version: 1.0
 Architecture: iphoneos-arm
 Description: Blur effect for Camera UI as it should be.
