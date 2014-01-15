@@ -61,36 +61,36 @@ static NSString * const CKBlurViewHardEdgesKey = @"inputHardEdges";
 }
 
 - (void)setQuality:(NSString *)quality {
-    [self.blurFilter setValue:quality forKey:CKBlurViewQualityKey];
+	[self.blurFilter setValue:quality forKey:CKBlurViewQualityKey];
 }
 
 - (NSString *)quality {
-    return [self.blurFilter valueForKey:CKBlurViewQualityKey];
+	return [self.blurFilter valueForKey:CKBlurViewQualityKey];
 }
 
 - (void)setBlurRadius:(CGFloat)radius {
-    [self.blurFilter setValue:@(radius) forKey:CKBlurViewRadiusKey];
+	[self.blurFilter setValue:@(radius) forKey:CKBlurViewRadiusKey];
 }
 
 - (CGFloat)blurRadius {
-    return [[self.blurFilter valueForKey:CKBlurViewRadiusKey] floatValue];
+	return [[self.blurFilter valueForKey:CKBlurViewRadiusKey] floatValue];
 }
 
 - (void)setBlurCroppingRect:(CGRect)croppingRect {
-    [self.blurFilter setValue:[NSValue valueWithCGRect:croppingRect] forKey:CKBlurViewBoundsKey];
+	[self.blurFilter setValue:[NSValue valueWithCGRect:croppingRect] forKey:CKBlurViewBoundsKey];
 }
 
 - (CGRect)blurCroppingRect {
-    NSValue *value = [self.blurFilter valueForKey:CKBlurViewBoundsKey];
-    return value ? [value CGRectValue] : CGRectNull;
+	NSValue *value = [self.blurFilter valueForKey:CKBlurViewBoundsKey];
+	return value ? [value CGRectValue] : CGRectNull;
 }
 
 - (void)setBlurEdges:(BOOL)blurEdges {
-    [self.blurFilter setValue:@(!blurEdges) forKey:CKBlurViewHardEdgesKey];
+	[self.blurFilter setValue:@(!blurEdges) forKey:CKBlurViewHardEdgesKey];
 }
 
 - (BOOL)blurEdges {
-    return ![[self.blurFilter valueForKey:CKBlurViewHardEdgesKey] boolValue];
+	return ![[self.blurFilter valueForKey:CKBlurViewHardEdgesKey] boolValue];
 }
 
 @end
