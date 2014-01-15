@@ -1,14 +1,15 @@
 #import "CKBlurView.h"
+#import <CoreGraphics/CoreGraphics.h>
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
 #define PreferencesChangedNotification "com.PS.CamBlur7.prefs"
-#define IPAD (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
 #define PH_BAR_HEIGHT 90
 
 static BOOL pf = NO;
 
 static BOOL blur;
-static BOOL handleEffectiPhone;
+static BOOL handleEffectTB;
+static BOOL handleEffectBB;
 static BOOL handleVideoTB;
 static BOOL handleVideoBB;
 static float blurAmount;
@@ -29,7 +30,13 @@ static float blurAmount;
 @property(readonly, assign, nonatomic) CAMTopBar* _topBar;
 @end
 
-@interface PLCameraController
+@interface PLCameraEffectsRenderer
+@property(assign, nonatomic, getter=isShowingGrid) BOOL showGrid;
+@end
+
+@interface PLCameraController : NSObject
+@property(retain) PLCameraEffectsRenderer* effectsRenderer;
++ (PLCameraController *)sharedInstance;
 - (PLCameraView *)delegate;
 @end
 
@@ -40,7 +47,8 @@ static void CB7Loader()
 {
 	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
 	blur = [dict objectForKey:@"blur"] ? [[dict objectForKey:@"blur"] boolValue] : YES;
-	handleEffectiPhone = [dict objectForKey:@"handleEffectiPhone"] ? [[dict objectForKey:@"handleEffectiPhone"] boolValue] : YES;
+	handleEffectTB = [dict objectForKey:@"handleEffectTB"] ? [[dict objectForKey:@"handleEffectTB"] boolValue] : YES;
+	handleEffectBB = [dict objectForKey:@"handleEffectBB"] ? [[dict objectForKey:@"handleEffectBB"] boolValue] : YES;
 	handleVideoTB = [dict objectForKey:@"handleVideoTB"] ? [[dict objectForKey:@"handleVideoTB"] boolValue] : YES;
 	handleVideoBB = [dict objectForKey:@"handleVideoBB"] ? [[dict objectForKey:@"handleVideoBB"] boolValue] : YES;
 	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
@@ -140,6 +148,8 @@ static void releaseBlurBar2()
 - (void)_layoutForVerticalOrientation
 {
 	%orig;
+	if ([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB)
+		return;
 	if (blurBar2 != nil) {
 		releaseBlurBar2();
 		CGSize size = self.frame.size;
@@ -152,6 +162,8 @@ static void releaseBlurBar2()
 - (void)_layoutForHorizontalOrientation
 {
 	%orig;
+	if ([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB)
+		return;
 	if (blurBar2 != nil) {
 		releaseBlurBar2();
 		CGSize size = self.frame.size;
@@ -201,7 +213,9 @@ static void releaseBlurBar2()
 - (void)cameraController:(id)controller didStartTransitionToShowEffectsGrid:(BOOL)showEffectsGrid animated:(BOOL)animated
 {
 	%orig;
-	if (!IPAD && handleEffectiPhone)
+	if (handleEffectTB)
+		blurBar.hidden = showEffectsGrid;
+	if (handleEffectBB)
 		blurBar2.hidden = showEffectsGrid;
 }
 

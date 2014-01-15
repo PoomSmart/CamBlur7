@@ -22,7 +22,7 @@
       	<string>Blur Effect</string>
         <key>footerText</key>
         <string>This tweak blurs a camera top bar and bottom bar.
-Hide in effects view - Hide blur effect of the bar(s) when the effects view is active.
+Hide in effects view - Hide blur effect of the bar(s) when the effects selector view is active.
 Hide in video - Hide blur effect of the bar(s) when recording video.
 TB = Top Bar, BB = Bottom Bar
 
@@ -50,9 +50,23 @@ Note: you need to enable "Full-screen Preview" option and "Camera Bottom Bar Opa
         <key>defaults</key>
         <string>com.PS.CamBlur7</string>
         <key>key</key>
-        <string>handleEffectiPhone</string>
+        <string>handleEffectTB</string>
         <key>label</key>
-        <string>Hide in effects view</string>
+        <string>Hide in effects view (TB)</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>handleEffectBB</string>
+        <key>label</key>
+        <string>Hide in effects view (BB)</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
