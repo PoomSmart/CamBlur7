@@ -12,6 +12,8 @@ static BOOL handleEffectTB;
 static BOOL handleEffectBB;
 static BOOL handleVideoTB;
 static BOOL handleVideoBB;
+static BOOL handlePanoTB;
+static BOOL handlePanoBB;
 static float blurAmount;
 
 @interface CAMTopBar : UIView
@@ -46,11 +48,15 @@ static CKBlurView *blurBar2;
 static void CB7Loader()
 {
 	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
-	blur = [dict objectForKey:@"blur"] ? [[dict objectForKey:@"blur"] boolValue] : YES;
-	handleEffectTB = [dict objectForKey:@"handleEffectTB"] ? [[dict objectForKey:@"handleEffectTB"] boolValue] : YES;
-	handleEffectBB = [dict objectForKey:@"handleEffectBB"] ? [[dict objectForKey:@"handleEffectBB"] boolValue] : YES;
-	handleVideoTB = [dict objectForKey:@"handleVideoTB"] ? [[dict objectForKey:@"handleVideoTB"] boolValue] : YES;
-	handleVideoBB = [dict objectForKey:@"handleVideoBB"] ? [[dict objectForKey:@"handleVideoBB"] boolValue] : YES;
+	#define BoolOpt(option) \
+		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] boolValue] : YES;
+	BoolOpt(blur)
+	BoolOpt(handleEffectTB)
+	BoolOpt(handleEffectBB)
+	BoolOpt(handleVideoTB)
+	BoolOpt(handleVideoBB)
+	BoolOpt(handlePanoTB)
+	BoolOpt(handlePanoBB)
 	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
 }
 
@@ -124,7 +130,8 @@ static void releaseBlurBar2()
 {
 	%orig;
 	pf = NO;
-	if ([[[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.PS.PhotoFlash.plist"] objectForKey:@"PFEnabled"] boolValue])
+	if ([[[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.PS.PhotoFlash.plist"] objectForKey:@"PFEnabled"] boolValue] &&
+		dlopen("/Library/MobileSubstrate/DynamicLibraries/PhotoFlash.dylib", RTLD_LAZY) != NULL)
 		pf = YES;
 	if (blurBar == nil) {
 		CGSize size = [self sizeThatFits:CGSizeZero];
@@ -217,6 +224,24 @@ static void releaseBlurBar2()
 		blurBar.hidden = showEffectsGrid;
 	if (handleEffectBB)
 		blurBar2.hidden = showEffectsGrid;
+}
+
+- (void)_performPanoramaCapture
+{
+	if (handlePanoTB)
+		blurBar.hidden = YES;
+	if (handlePanoBB)
+		blurBar2.hidden = YES;
+	%orig;
+}
+
+- (void)cameraControllerWillStopPanoramaCapture:(id)capture
+{
+	if (handlePanoTB)
+		blurBar.hidden = NO;
+	if (handlePanoBB)
+		blurBar2.hidden = NO;
+	%orig;
 }
 
 %end

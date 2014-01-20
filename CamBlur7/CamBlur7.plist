@@ -22,9 +22,6 @@
       	<string>Blur Effect</string>
         <key>footerText</key>
         <string>This tweak blurs a camera top bar and bottom bar.
-Hide in effects view - Hide blur effect of the bar(s) when the effects selector view is active.
-Hide in video - Hide blur effect of the bar(s) when recording video.
-TB = Top Bar, BB = Bottom Bar
 
 Note: you need to enable "Full-screen Preview" option and "Camera Bottom Bar Opacity" not less than 1.0 for TransparentCameraBar tweak settings, to make CamBlur7 works properly.</string>
       </dict>
@@ -41,6 +38,17 @@ Note: you need to enable "Full-screen Preview" option and "Camera Bottom Bar Opa
         <string>Enabled</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+      	<string>Temporary hide the blur views</string>
+        <key>footerText</key>
+        <string>Hide in effects view - Hide blur effect of the bar(s) when the effects selector view is active.
+Hide in video - Hide blur effect of the bar(s) when recording video.
+Hide in pano - Hide blur effect of the bar(s) when capturing panorama.
+TB = Top Bar, BB = Bottom Bar</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -95,6 +103,34 @@ Note: you need to enable "Full-screen Preview" option and "Camera Bottom Bar Opa
         <string>handleVideoBB</string>
         <key>label</key>
         <string>Hide in video (BB)</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>handlePanoTB</string>
+        <key>label</key>
+        <string>Hide in pano (TB)</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>handlePanoBB</string>
+        <key>label</key>
+        <string>Hide in pano (BB)</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
