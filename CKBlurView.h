@@ -8,6 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
+@interface CAFilter : NSObject
+
++ (instancetype)filterWithName:(NSString *)name;
+
+@end
+
 extern NSString * const CKBlurViewQualityDefault;
 
 extern NSString * const CKBlurViewQualityLow;
@@ -33,5 +39,7 @@ NS_CLASS_AVAILABLE_IOS(7_0) @interface CKBlurView : UIView
  Boolean indicating whether the edge of the view should be softened. Defaults to YES.
  */
 @property (nonatomic) BOOL blurEdges;
+
+- (void)setTintColorFilter:(CAFilter *)filter;
 
 @end

@@ -21,9 +21,7 @@
         <key>label</key>
       	<string>Blur Effect</string>
         <key>footerText</key>
-        <string>This tweak blurs a camera top bar and bottom bar.
-
-Note: you need to enable "Full-screen Preview" option and "Camera Bottom Bar Opacity" not less than 1.0 for TransparentCameraBar tweak settings, to make CamBlur7 works properly.</string>
+        <string>This tweak blurs a camera top bar and bottom bar.</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -140,7 +138,7 @@ TB = Top Bar, BB = Bottom Bar</string>
         <key>label</key>
       	<string>Blur Radius</string>
         <key>footerText</key>
-        <string>Set blur amount. (value from 0.0 to 100.0)</string>
+        <string>Set blur amount. (value from 0.0 to 200.0)</string>
       </dict>
       <dict>
 			<key>PostNotification</key>
@@ -154,12 +152,148 @@ TB = Top Bar, BB = Bottom Bar</string>
 			<key>key</key>
 			<string>blurAmount</string>
 			<key>max</key>
-			<real>100.0</real>
+			<real>200.0</real>
 			<key>min</key>
 			<real>0.0</real>
 			<key>showValue</key>
 			<true/>
 		</dict>
+		<dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>Top Blur Color (RGB)</string>
+        <key>footerText</key>
+        <string>Set the camera top bar blur color.</string>
+      </dict>
+      <dict>
+			<key>PostNotification</key>
+			<string>com.PS.CamBlur7.prefs</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>1.0</real>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>key</key>
+			<string>tR</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>showValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>com.PS.CamBlur7.prefs</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>1.0</real>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>key</key>
+			<string>tG</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>showValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>com.PS.CamBlur7.prefs</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>1.0</real>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>key</key>
+			<string>tB</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>showValue</key>
+			<true/>
+		</dict>
+		<dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>Bottom Blur Color (RGB)</string>
+        <key>footerText</key>
+        <string>Set the camera bottom bar blur color.</string>
+      </dict>
+      <dict>
+			<key>PostNotification</key>
+			<string>com.PS.CamBlur7.prefs</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>1.0</real>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>key</key>
+			<string>bR</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>showValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>com.PS.CamBlur7.prefs</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>1.0</real>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>key</key>
+			<string>bG</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>showValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>com.PS.CamBlur7.prefs</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>1.0</real>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>key</key>
+			<string>bB</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
+			<key>showValue</key>
+			<true/>
+		</dict>
+		<dict>
+      		<key>cell</key>
+      		<string>PSGroupCell</string>
+      </dict>
+      <dict>
+      		<key>cell</key>
+      		<string>PSButtonCell</string>
+      		<key>action</key>
+      		<string>donate:</string>
+      		<key>label</key>
+      		<string>Donate ^^</string>
+      </dict>
       <dict>
         <key>cell</key>
         <string>PSGroupCell</string>

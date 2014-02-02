@@ -1,0 +1,10 @@
+{
+	entry = {
+		bundle = "CamBlur7Settings";
+		cell = PSLinkCell;
+		detail = "CB7PreferenceController";
+		icon = "CamBlur7.png";
+		isController = 1;
+		label = "CamBlur7";
+	};
+}

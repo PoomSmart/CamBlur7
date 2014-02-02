@@ -14,15 +14,11 @@
 
 @end
 
-@interface CAFilter : NSObject
-
-+ (instancetype)filterWithName:(NSString *)name;
-
-@end
-
 @interface CKBlurView ()
 
 @property (retain, nonatomic) CAFilter *blurFilter;
+
+@property (retain, nonatomic) CAFilter *colorFilter;
 
 @end
 
@@ -43,11 +39,13 @@ static NSString * const CKBlurViewHardEdgesKey = @"inputHardEdges";
 
 @implementation CKBlurView
 
-+ (Class)layerClass {
++ (Class)layerClass
+{
     return [CABackdropLayer class];
 }
 
-- (instancetype)initWithFrame:(CGRect)frame {
+- (instancetype)initWithFrame:(CGRect)frame
+{
     self = [super initWithFrame:frame];
     if (self) {
         CAFilter *filter = [CAFilter filterWithName:kCAFilterGaussianBlur];
@@ -60,36 +58,50 @@ static NSString * const CKBlurViewHardEdgesKey = @"inputHardEdges";
     return self;
 }
 
-- (void)setQuality:(NSString *)quality {
+- (void)setQuality:(NSString *)quality
+{
 	[self.blurFilter setValue:quality forKey:CKBlurViewQualityKey];
 }
 
-- (NSString *)quality {
+- (NSString *)quality
+{
 	return [self.blurFilter valueForKey:CKBlurViewQualityKey];
 }
 
-- (void)setBlurRadius:(CGFloat)radius {
+- (void)setBlurRadius:(CGFloat)radius
+{
 	[self.blurFilter setValue:@(radius) forKey:CKBlurViewRadiusKey];
 }
 
-- (CGFloat)blurRadius {
+- (CGFloat)blurRadius
+{
 	return [[self.blurFilter valueForKey:CKBlurViewRadiusKey] floatValue];
 }
 
-- (void)setBlurCroppingRect:(CGRect)croppingRect {
+- (void)setBlurCroppingRect:(CGRect)croppingRect
+{
 	[self.blurFilter setValue:[NSValue valueWithCGRect:croppingRect] forKey:CKBlurViewBoundsKey];
 }
 
-- (CGRect)blurCroppingRect {
+- (CGRect)blurCroppingRect
+{
 	NSValue *value = [self.blurFilter valueForKey:CKBlurViewBoundsKey];
 	return value ? [value CGRectValue] : CGRectNull;
 }
 
-- (void)setBlurEdges:(BOOL)blurEdges {
+- (void)setBlurEdges:(BOOL)blurEdges
+{
 	[self.blurFilter setValue:@(!blurEdges) forKey:CKBlurViewHardEdgesKey];
 }
 
-- (BOOL)blurEdges {
+- (void)setTintColorFilter:(CAFilter *)filter
+{
+    self.colorFilter = filter;
+    self.layer.filters = @[ self.colorFilter , self.blurFilter ];
+}
+
+- (BOOL)blurEdges
+{
 	return ![[self.blurFilter valueForKey:CKBlurViewHardEdgesKey] boolValue];
 }
 

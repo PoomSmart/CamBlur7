@@ -14,7 +14,14 @@ static BOOL handleVideoTB;
 static BOOL handleVideoBB;
 static BOOL handlePanoTB;
 static BOOL handlePanoBB;
+
 static float blurAmount;
+static float tR;
+static float tG;
+static float tB;
+static float bR;
+static float bG;
+static float bB;
 
 @interface CAMTopBar : UIView
 - (CGSize)sizeThatFits:(CGSize)fits;
@@ -50,6 +57,8 @@ static void CB7Loader()
 	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
 	#define BoolOpt(option) \
 		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] boolValue] : YES;
+	#define FloatOpt(option) \
+		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] floatValue] : 0.35;
 	BoolOpt(blur)
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
@@ -57,6 +66,12 @@ static void CB7Loader()
 	BoolOpt(handleVideoBB)
 	BoolOpt(handlePanoTB)
 	BoolOpt(handlePanoBB)
+	FloatOpt(tR)
+	FloatOpt(tG)
+	FloatOpt(tB)
+	FloatOpt(bR)
+	FloatOpt(bG)
+	FloatOpt(bB)
 	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
 }
 
@@ -67,12 +82,26 @@ static void PreferencesChangedCallback(CFNotificationCenterRef center, void *obs
 	CB7Loader();
 }
 
+static void setBlurBarColor(CKBlurView *bar, BOOL top)
+{
+	UIColor *blurTint;
+	if (top)
+		blurTint = [UIColor colorWithRed:tR green:tG blue:tB alpha:1];
+	else
+		blurTint = [UIColor colorWithRed:bR green:bG blue:bB alpha:1];
+	const CGFloat *rgb = CGColorGetComponents(blurTint.CGColor);
+    CAFilter *tintFilter = [CAFilter filterWithName:@"colorAdd"];
+    [tintFilter setValue:@[@(rgb[0]), @(rgb[1]), @(rgb[2]), @(CGColorGetAlpha(blurTint.CGColor))] forKey:@"inputColor"];
+	[bar setTintColorFilter:tintFilter];
+}
+
 static void createBlurBarWithFrame(CGRect frame)
 {
 	blurBar = [[CKBlurView alloc] initWithFrame:frame];
 	blurBar.blurRadius = blurAmount;
 	blurBar.frame = frame;
 	blurBar.blurCroppingRect = frame;
+	setBlurBarColor(blurBar, YES);
 }
 
 static void createBlurBar2WithFrame(CGRect frame)
@@ -81,6 +110,7 @@ static void createBlurBar2WithFrame(CGRect frame)
 	blurBar2.blurRadius = blurAmount;
 	blurBar2.frame = frame;
 	blurBar2.blurCroppingRect = frame;
+	setBlurBarColor(blurBar2, NO);
 }
 
 static void releaseBlurBar()
