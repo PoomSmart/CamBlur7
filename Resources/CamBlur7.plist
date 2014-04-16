@@ -285,6 +285,38 @@ TB = Top Bar, BB = Bottom Bar</string>
 		<dict>
       		<key>cell</key>
       		<string>PSGroupCell</string>
+      		<key>label</key>
+        	<string>Blur Quality</string>
+      		<key>footerText</key>
+      		<string>From here you can choose the blur effect quality.</string>
+      </dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>defaults</key>
+			<string>com.PS.CamBlur7</string>
+			<key>PostNotification</key>
+        	<string>com.PS.CamBlur7.prefs</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>Quality</string>
+			<key>label</key>
+			<string>Select</string>
+			<key>validTitles</key>
+			<array>
+				<string>low</string>
+				<string>default</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>1</integer>
+				<integer>0</integer>
+			</array>
+		</dict>
+		<dict>
+      		<key>cell</key>
+      		<string>PSGroupCell</string>
       </dict>
       <dict>
       		<key>cell</key>
