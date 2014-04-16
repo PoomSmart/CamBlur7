@@ -8,13 +8,13 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-#import "CKBlurView.h"
+#import "CKCB7BlurView.h"
 
 @interface CABackdropLayer : CALayer
 
 @end
 
-@interface CKBlurView ()
+@interface CKCB7BlurView ()
 
 @property (retain, nonatomic) CAFilter *blurFilter;
 
@@ -37,7 +37,7 @@ static NSString * const CKBlurViewBoundsKey = @"inputBounds";
 static NSString * const CKBlurViewHardEdgesKey = @"inputHardEdges";
 
 
-@implementation CKBlurView
+@implementation CKCB7BlurView
 
 + (Class)layerClass
 {

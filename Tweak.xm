@@ -1,4 +1,4 @@
-#import "CKBlurView.h"
+#import "CKCB7BlurView.h"
 #import <CoreGraphics/CoreGraphics.h>
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
@@ -23,6 +23,8 @@ static float bR;
 static float bG;
 static float bB;
 
+static NSString *quality = CKBlurViewQualityDefault;
+
 @interface CAMTopBar : UIView
 - (CGSize)sizeThatFits:(CGSize)fits;
 @end
@@ -35,7 +37,7 @@ static float bB;
 - (CGSize)sizeThatFits:(CGSize)fits;
 @end
 
-@interface PLCameraView
+@interface PLCameraView : UIView
 @property(readonly, assign, nonatomic) CAMTopBar* _topBar;
 @end
 
@@ -44,13 +46,13 @@ static float bB;
 @end
 
 @interface PLCameraController : NSObject
-@property(retain) PLCameraEffectsRenderer* effectsRenderer;
+@property(retain) PLCameraEffectsRenderer *effectsRenderer;
 + (PLCameraController *)sharedInstance;
 - (PLCameraView *)delegate;
 @end
 
-static CKBlurView *blurBar;
-static CKBlurView *blurBar2;
+static CKCB7BlurView *blurBar = nil;
+static CKCB7BlurView *blurBar2 = nil;
 
 static void CB7Loader()
 {
@@ -72,6 +74,8 @@ static void CB7Loader()
 	FloatOpt(bR)
 	FloatOpt(bG)
 	FloatOpt(bB)
+	int value = [dict objectForKey:@"Quality"] != nil ? [[dict objectForKey:@"Quality"] intValue] : 0;
+	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
 	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
 }
 
@@ -82,7 +86,7 @@ static void PreferencesChangedCallback(CFNotificationCenterRef center, void *obs
 	CB7Loader();
 }
 
-static void setBlurBarColor(CKBlurView *bar, BOOL top)
+static void setBlurBarColor(CKCB7BlurView *bar, BOOL top)
 {
 	UIColor *blurTint;
 	if (top)
@@ -97,19 +101,21 @@ static void setBlurBarColor(CKBlurView *bar, BOOL top)
 
 static void createBlurBarWithFrame(CGRect frame)
 {
-	blurBar = [[CKBlurView alloc] initWithFrame:frame];
+	blurBar = [[CKCB7BlurView alloc] initWithFrame:frame];
 	blurBar.blurRadius = blurAmount;
 	blurBar.frame = frame;
 	blurBar.blurCroppingRect = frame;
+	[blurBar setBlurQuality:quality];
 	setBlurBarColor(blurBar, YES);
 }
 
 static void createBlurBar2WithFrame(CGRect frame)
 {
-	blurBar2 = [[CKBlurView alloc] initWithFrame:frame];
+	blurBar2 = [[CKCB7BlurView alloc] initWithFrame:frame];
 	blurBar2.blurRadius = blurAmount;
 	blurBar2.frame = frame;
 	blurBar2.blurCroppingRect = frame;
+	[blurBar2 setBlurQuality:quality];
 	setBlurBarColor(blurBar2, NO);
 }
 

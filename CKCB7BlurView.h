@@ -18,7 +18,7 @@ extern NSString * const CKBlurViewQualityDefault;
 
 extern NSString * const CKBlurViewQualityLow;
 
-NS_CLASS_AVAILABLE_IOS(7_0) @interface CKBlurView : UIView
+NS_CLASS_AVAILABLE_IOS(7_0) @interface CKCB7BlurView : UIView
 
 /**
  Quality of the blur. The lower the quality, the more performant the blur. Must be one of `CKBlurViewQualityDefault` or `CKBlurViewQualityLow`. Defaults to `CKBlurViewQualityDefault`.

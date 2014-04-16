@@ -4,7 +4,7 @@ ARCHS = armv7 armv7s arm64
 
 include theos/makefiles/common.mk
 TWEAK_NAME = CamBlur7
-CamBlur7_FILES = Tweak.xm CKBlurView.m
+CamBlur7_FILES = Tweak.xm CKCB7BlurView.m
 CamBlur7_FRAMEWORKS = UIKit CoreGraphics
 CamBlur7_PRIVATE_FRAMEWORKS = QuartzCore
 
