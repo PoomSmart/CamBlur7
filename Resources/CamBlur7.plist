@@ -138,7 +138,7 @@ TB = Top Bar, BB = Bottom Bar</string>
         <key>label</key>
       	<string>Blur Radius</string>
         <key>footerText</key>
-        <string>Set blur amount. (value from 0.0 to 200.0)</string>
+        <string>Set blur amount.</string>
       </dict>
       <dict>
 			<key>PostNotification</key>
