@@ -1,4 +1,4 @@
-#import "CKCB7BlurView.h"
+#import "Backdrop.h"
 #import <CoreGraphics/CoreGraphics.h>
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
@@ -23,7 +23,7 @@ static float bR;
 static float bG;
 static float bB;
 
-static NSString *quality = CKBlurViewQualityDefault;
+static NSString *quality = @"default";
 
 @interface CAMTopBar : UIView
 - (CGSize)sizeThatFits:(CGSize)fits;
@@ -51,8 +51,8 @@ static NSString *quality = CKBlurViewQualityDefault;
 - (PLCameraView *)delegate;
 @end
 
-static CKCB7BlurView *blurBar = nil;
-static CKCB7BlurView *blurBar2 = nil;
+static _UIBackdropView *blurBar = nil;
+static _UIBackdropView *blurBar2 = nil;
 
 static void CB7Loader()
 {
@@ -75,7 +75,7 @@ static void CB7Loader()
 	FloatOpt(bG)
 	FloatOpt(bB)
 	int value = [dict objectForKey:@"Quality"] != nil ? [[dict objectForKey:@"Quality"] intValue] : 0;
-	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
+	quality = value == 1 ? @"low" : @"default";
 	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
 }
 
@@ -86,36 +86,41 @@ static void PreferencesChangedCallback(CFNotificationCenterRef center, void *obs
 	CB7Loader();
 }
 
-static void setBlurBarColor(CKCB7BlurView *bar, BOOL top)
+static void setBlurBarColor(_UIBackdropView *bar, BOOL top)
 {
 	UIColor *blurTint;
 	if (top)
 		blurTint = [UIColor colorWithRed:tR green:tG blue:tB alpha:1];
 	else
 		blurTint = [UIColor colorWithRed:bR green:bG blue:bB alpha:1];
-	const CGFloat *rgb = CGColorGetComponents(blurTint.CGColor);
-    CAFilter *tintFilter = [CAFilter filterWithName:@"colorAdd"];
-    [tintFilter setValue:@[@(rgb[0]), @(rgb[1]), @(rgb[2]), @(CGColorGetAlpha(blurTint.CGColor))] forKey:@"inputColor"];
-	[bar setTintColorFilter:tintFilter];
+	[bar.inputSettings setColorTint:blurTint];
+	[bar.outputSettings setColorTint:blurTint];
 }
 
-static void createBlurBarWithFrame(CGRect frame)
+static _UIBackdropViewSettings *blurSettings()
 {
-	blurBar = [[CKCB7BlurView alloc] initWithFrame:frame];
-	blurBar.blurRadius = blurAmount;
-	blurBar.frame = frame;
-	blurBar.blurCroppingRect = frame;
-	[blurBar setBlurQuality:quality];
+	_UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:0];
+	[settings setUsesColorTintView:YES];
+	[settings setColorTintAlpha:0.4];
+	[settings setRequiresColorStatistics:YES];
+	[settings setBlurRadius:blurAmount];
+	[settings setBlurQuality:quality];
+	return settings;
+}
+
+static void createBlurBar()
+{
+	blurBar = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:blurSettings()];
+	blurBar.inputSettings.blurRadius = blurAmount;
+	blurBar.outputSettings.blurRadius = blurAmount;
 	setBlurBarColor(blurBar, YES);
 }
 
-static void createBlurBar2WithFrame(CGRect frame)
+static void createBlurBar2()
 {
-	blurBar2 = [[CKCB7BlurView alloc] initWithFrame:frame];
-	blurBar2.blurRadius = blurAmount;
-	blurBar2.frame = frame;
-	blurBar2.blurCroppingRect = frame;
-	[blurBar2 setBlurQuality:quality];
+	blurBar2 = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:blurSettings()];
+	blurBar2.inputSettings.blurRadius = blurAmount;
+	blurBar2.outputSettings.blurRadius = blurAmount;
 	setBlurBarColor(blurBar2, NO);
 }
 
@@ -137,30 +142,7 @@ static void releaseBlurBar2()
 	}
 }
 
-%hook PLCameraController
-
-- (void)_setCameraMode:(int)mode cameraDevice:(int)device
-{
-	%orig;
-	if (pf) {
-		CGSize size = blurBar.frame.size;
-		CGRect frame = CGRectMake(0, 0, size.width, device == 0 ? PH_BAR_HEIGHT : 40);
-		[[self delegate]._topBar updateSize:frame];
-	}
-}
-
-%end
-
 %hook CAMTopBar
-
-%new
-- (void)updateSize:(CGRect)frame
-{
-	releaseBlurBar();
-	UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
-	createBlurBarWithFrame(frame);
-	[backgroundView insertSubview:blurBar atIndex:0];
-}
 
 - (void)_commonCAMTopBarInitialization
 {
@@ -170,10 +152,8 @@ static void releaseBlurBar2()
 		dlopen("/Library/MobileSubstrate/DynamicLibraries/PhotoFlash.dylib", RTLD_LAZY) != NULL)
 		pf = YES;
 	if (blurBar == nil) {
-		CGSize size = [self sizeThatFits:CGSizeZero];
-		CGRect frame = CGRectMake(0, 0, size.width, pf ? PH_BAR_HEIGHT : size.height);
 		UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
-		createBlurBarWithFrame(frame);
+		createBlurBar();
 		[backgroundView addSubview:blurBar];
     }
 }
@@ -195,9 +175,7 @@ static void releaseBlurBar2()
 		return;
 	if (blurBar2 != nil) {
 		releaseBlurBar2();
-		CGSize size = self.frame.size;
-		CGRect frame = CGRectMake(0, 0, size.width, size.height);
-		createBlurBar2WithFrame(frame);
+		createBlurBar2();
 		[self insertSubview:blurBar2 atIndex:0];
     }
 }
@@ -209,9 +187,7 @@ static void releaseBlurBar2()
 		return;
 	if (blurBar2 != nil) {
 		releaseBlurBar2();
-		CGSize size = self.frame.size;
-		CGRect frame = CGRectMake(0, 0, size.width, size.height);
-		createBlurBar2WithFrame(frame);
+		createBlurBar2();
 		[self insertSubview:blurBar2 atIndex:0];
     }
 }
@@ -220,7 +196,7 @@ static void releaseBlurBar2()
 {
 	%orig;
 	if (blurBar2 == nil) {
-		createBlurBar2WithFrame(CGRectZero);
+		createBlurBar2();
 		[self addSubview:blurBar2];
     }
 }
