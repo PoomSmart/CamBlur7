@@ -168,30 +168,6 @@ static void releaseBlurBar2()
 
 %hook CAMBottomBar
 
-- (void)_layoutForVerticalOrientation
-{
-	%orig;
-	if ([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB)
-		return;
-	if (blurBar2 != nil) {
-		releaseBlurBar2();
-		createBlurBar2();
-		[self insertSubview:blurBar2 atIndex:0];
-    }
-}
-
-- (void)_layoutForHorizontalOrientation
-{
-	%orig;
-	if ([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB)
-		return;
-	if (blurBar2 != nil) {
-		releaseBlurBar2();
-		createBlurBar2();
-		[self insertSubview:blurBar2 atIndex:0];
-    }
-}
-
 - (void)_commonCAMBottomBarInitialization
 {
 	%orig;
