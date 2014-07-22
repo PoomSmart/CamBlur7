@@ -1,4 +1,5 @@
 #import "Backdrop.h"
+#import "CKCB7BlurView.h"
 #import <CoreGraphics/CoreGraphics.h>
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
@@ -6,6 +7,7 @@
 #define PH_BAR_HEIGHT 90
 
 static BOOL pf = NO;
+static BOOL notUseBackdrop = YES;
 
 static BOOL blur;
 static BOOL handleEffectTB;
@@ -23,7 +25,7 @@ static float bR;
 static float bG;
 static float bB;
 
-static NSString *quality = @"default";
+static NSString *quality = CKBlurViewQualityDefault;
 
 @interface CAMTopBar : UIView
 - (CGSize)sizeThatFits:(CGSize)fits;
@@ -49,10 +51,13 @@ static NSString *quality = @"default";
 @property(retain) PLCameraEffectsRenderer *effectsRenderer;
 + (PLCameraController *)sharedInstance;
 - (PLCameraView *)delegate;
+- (BOOL)isCapturingVideo;
 @end
 
-static _UIBackdropView *blurBar = nil;
-static _UIBackdropView *blurBar2 = nil;
+static CKCB7BlurView *blurBar = nil;
+static CKCB7BlurView *blurBar2 = nil;
+static _UIBackdropView *backdropBar = nil;
+static _UIBackdropView *backdropBar2 = nil;
 
 static void CB7Loader()
 {
@@ -62,6 +67,8 @@ static void CB7Loader()
 	#define FloatOpt(option) \
 		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] floatValue] : 0.35;
 	BoolOpt(blur)
+	BoolOpt(notUseBackdrop)
+	notUseBackdrop = !notUseBackdrop;
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
 	BoolOpt(handleVideoTB)
@@ -75,7 +82,7 @@ static void CB7Loader()
 	FloatOpt(bG)
 	FloatOpt(bB)
 	int value = [dict objectForKey:@"Quality"] != nil ? [[dict objectForKey:@"Quality"] intValue] : 0;
-	quality = value == 1 ? @"low" : @"default";
+	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
 	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
 }
 
@@ -86,61 +93,163 @@ static void PreferencesChangedCallback(CFNotificationCenterRef center, void *obs
 	CB7Loader();
 }
 
-static void setBlurBarColor(_UIBackdropView *bar, BOOL top)
+static void setBlurBarColor(id bar, BOOL top)
 {
-	UIColor *blurTint;
+	UIColor *blurTint = nil;
 	if (top)
 		blurTint = [UIColor colorWithRed:tR green:tG blue:tB alpha:1];
 	else
 		blurTint = [UIColor colorWithRed:bR green:bG blue:bB alpha:1];
-	[bar.inputSettings setColorTint:blurTint];
-	[bar.outputSettings setColorTint:blurTint];
+	if ([NSStringFromClass([bar class]) isEqualToString:@"_UIBackdropView"]) {
+		[((_UIBackdropView *)bar).inputSettings setColorTint:blurTint];
+		[((_UIBackdropView *)bar).outputSettings setColorTint:blurTint];
+	} else {
+		const CGFloat *rgb = CGColorGetComponents(blurTint.CGColor);
+    	CAFilter *tintFilter = [CAFilter filterWithName:@"colorAdd"];
+		[tintFilter setValue:@[@(rgb[0]), @(rgb[1]), @(rgb[2]), @(CGColorGetAlpha(blurTint.CGColor))] forKey:@"inputColor"];
+		[(CKCB7BlurView *)bar setTintColorFilter:tintFilter];
+	}
 }
 
-static _UIBackdropViewSettings *blurSettings()
+static _UIBackdropViewSettings *backdropBlurSettings()
 {
 	_UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:0];
 	[settings setUsesColorTintView:YES];
-	[settings setColorTintAlpha:0.4];
+	[settings setColorTintAlpha:0.5];
 	[settings setRequiresColorStatistics:YES];
 	[settings setBlurRadius:blurAmount];
 	[settings setBlurQuality:quality];
 	return settings;
 }
 
-static void createBlurBar()
+static void createBlurBarWithFrame(CGRect frame)
 {
-	blurBar = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:blurSettings()];
-	blurBar.inputSettings.blurRadius = blurAmount;
-	blurBar.outputSettings.blurRadius = blurAmount;
+	blurBar = [[CKCB7BlurView alloc] initWithFrame:frame];
+	blurBar.blurRadius = blurAmount;
+	blurBar.frame = frame;
+	blurBar.blurCroppingRect = frame;
+	[blurBar setBlurQuality:quality];
 	setBlurBarColor(blurBar, YES);
 }
 
-static void createBlurBar2()
+static void createBlurBar2WithFrame(CGRect frame)
 {
-	blurBar2 = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:blurSettings()];
-	blurBar2.inputSettings.blurRadius = blurAmount;
-	blurBar2.outputSettings.blurRadius = blurAmount;
+	blurBar2 = [[CKCB7BlurView alloc] initWithFrame:frame];
+	blurBar2.blurRadius = blurAmount;
+	blurBar2.frame = frame;
+	blurBar2.blurCroppingRect = frame;
+	[blurBar2 setBlurQuality:quality];
 	setBlurBarColor(blurBar2, NO);
 }
 
-static void releaseBlurBar()
+static void createBackdropBar()
+{
+	backdropBar = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:backdropBlurSettings()];
+	backdropBar.inputSettings.blurRadius = blurAmount;
+	backdropBar.outputSettings.blurRadius = blurAmount;
+	setBlurBarColor(backdropBar, YES);
+}
+
+static void createBackdropBar2()
+{
+	backdropBar2 = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:backdropBlurSettings()];
+	backdropBar2.inputSettings.blurRadius = blurAmount;
+	backdropBar2.outputSettings.blurRadius = blurAmount;
+	setBlurBarColor(backdropBar2, NO);
+}
+
+static void releaseBlurBars()
 {
 	if (blurBar != nil) {
 		[blurBar removeFromSuperview];
 		[blurBar release];
 		blurBar = nil;
 	}
+	if (backdropBar != nil) {
+		[backdropBar removeFromSuperview];
+		[backdropBar release];
+		backdropBar = nil;
+	}
 }
 
-static void releaseBlurBar2()
+static void releaseBlurBars2()
 {
 	if (blurBar2 != nil) {
 		[blurBar2 removeFromSuperview];
 		[blurBar2 release];
 		blurBar2 = nil;
 	}
+	if (backdropBar2 != nil) {
+		[backdropBar2 removeFromSuperview];
+		[backdropBar2 release];
+		backdropBar2 = nil;
+	}
 }
+
+%group CKCB7BlurView
+
+%hook PLCameraController
+
+- (void)_setCameraMode:(int)mode cameraDevice:(int)device
+{
+	%orig;
+	if (pf) {
+		CGSize size = blurBar.frame.size;
+		CGRect frame = CGRectMake(0, 0, size.width, device == 0 ? PH_BAR_HEIGHT : 40);
+		[[self delegate]._topBar updateSize:frame];
+	}
+}
+
+%end
+
+%hook CAMTopBar
+
+%new
+- (void)updateSize:(CGRect)frame
+{
+	releaseBlurBars();
+	UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
+	createBlurBarWithFrame(frame);
+	[backgroundView insertSubview:blurBar atIndex:0];
+}
+
+%end
+
+%hook CAMBottomBar
+
+- (void)_layoutForVerticalOrientation
+{
+	%orig;
+	if (([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[%c(PLCameraController) sharedInstance] isCapturingVideo] && handleVideoBB))
+		return;
+	if (blurBar2 != nil) {
+		releaseBlurBars2();
+		CGSize size = self.frame.size;
+		CGRect frame = CGRectMake(0, 0, size.width, size.height);
+		createBlurBar2WithFrame(frame);
+		[self insertSubview:blurBar2 atIndex:0];
+    }
+}
+
+- (void)_layoutForHorizontalOrientation
+{
+	%orig;
+	if (([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[%c(PLCameraController) sharedInstance] isCapturingVideo] && handleVideoBB))
+		return;
+	if (blurBar2 != nil) {
+		releaseBlurBars2();
+		CGSize size = self.frame.size;
+		CGRect frame = CGRectMake(0, 0, size.width, size.height);
+		createBlurBar2WithFrame(frame);
+		[self insertSubview:blurBar2 atIndex:0];
+    }
+}
+
+%end
+
+%end
+
+%group Common
 
 %hook CAMTopBar
 
@@ -151,16 +260,21 @@ static void releaseBlurBar2()
 	if ([[[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.PS.PhotoFlash.plist"] objectForKey:@"PFEnabled"] boolValue] &&
 		dlopen("/Library/MobileSubstrate/DynamicLibraries/PhotoFlash.dylib", RTLD_LAZY) != NULL)
 		pf = YES;
-	if (blurBar == nil) {
-		UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
-		createBlurBar();
+	UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
+	if (!notUseBackdrop) {
+		createBackdropBar();
+		[backgroundView addSubview:backdropBar];
+	} else {
+		CGSize size = [self sizeThatFits:CGSizeZero];
+		CGRect frame = CGRectMake(0, 0, size.width, pf ? PH_BAR_HEIGHT : size.height);
+		createBlurBarWithFrame(frame);
 		[backgroundView addSubview:blurBar];
-    }
+	}
 }
 
 - (void)dealloc
 {
-	releaseBlurBar();
+	releaseBlurBars();
 	%orig;
 }
 
@@ -171,15 +285,18 @@ static void releaseBlurBar2()
 - (void)_commonCAMBottomBarInitialization
 {
 	%orig;
-	if (blurBar2 == nil) {
-		createBlurBar2();
+	if (!notUseBackdrop) {
+		createBackdropBar2();
+		[self addSubview:backdropBar2];
+    } else {
+    	createBlurBar2WithFrame(CGRectZero);
 		[self addSubview:blurBar2];
     }
 }
 
 - (void)dealloc
 {
-	releaseBlurBar2();
+	releaseBlurBars2();
 	%orig;
 }
 
@@ -189,48 +306,69 @@ static void releaseBlurBar2()
 
 - (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
 {
-	if (handleVideoTB)
+	if (handleVideoTB) {
 		blurBar.hidden = YES;
-	if (handleVideoBB)
+		backdropBar.hidden = YES;
+	}
+	if (handleVideoBB) {
 		blurBar2.hidden = YES;
+		backdropBar2.hidden = YES;
+	}
 	%orig;
 }
 
 - (void)cameraControllerDidStopVideoCapture:(id)cameraController
 {
 	%orig;
-	if (handleVideoTB)
+	if (handleVideoTB) {
 		blurBar.hidden = NO;
-	if (handleVideoBB)
+		backdropBar.hidden = NO;
+	}
+	if (handleVideoBB) {
 		blurBar2.hidden = NO;
+		backdropBar2.hidden = NO;
+	}
 }
 
 - (void)cameraController:(id)controller didStartTransitionToShowEffectsGrid:(BOOL)showEffectsGrid animated:(BOOL)animated
 {
 	%orig;
-	if (handleEffectTB)
+	if (handleEffectTB) {
 		blurBar.hidden = showEffectsGrid;
-	if (handleEffectBB)
+		backdropBar.hidden = showEffectsGrid;
+	}
+	if (handleEffectBB) {
 		blurBar2.hidden = showEffectsGrid;
+		backdropBar2.hidden = showEffectsGrid;
+	}
 }
 
 - (void)_performPanoramaCapture
 {
-	if (handlePanoTB)
+	if (handlePanoTB) {
 		blurBar.hidden = YES;
-	if (handlePanoBB)
+		backdropBar.hidden = YES;
+	}
+	if (handlePanoBB) {
 		blurBar2.hidden = YES;
+		backdropBar2.hidden = YES;
+	}
 	%orig;
 }
 
 - (void)cameraControllerWillStopPanoramaCapture:(id)capture
 {
-	if (handlePanoTB)
+	if (handlePanoTB) {
 		blurBar.hidden = NO;
-	if (handlePanoBB)
-		blurBar2.hidden = NO;
+		backdropBar.hidden = NO;
+	}
+	if (handlePanoBB) {
+		backdropBar2.hidden = NO;
+	}
 	%orig;
 }
+
+%end
 
 %end
 
@@ -239,7 +377,10 @@ static void releaseBlurBar2()
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChangedCallback, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	CB7Loader();
 	if (blur) {
-		%init();
+		%init(Common);
+		if (notUseBackdrop) {
+			%init(CKCB7BlurView);
+		}
 	}
 	[pool drain];
 }

@@ -21,7 +21,8 @@
         <key>label</key>
       	<string>Blur Effect</string>
         <key>footerText</key>
-        <string>This tweak blurs a camera top bar and bottom bar.</string>
+        <string>This tweak blurs a camera top bar and bottom bar.
+❗ If Use Backdrop effect option is enabled, the camera bars will be blurry and act just like iOS 7 blurry UI.</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -39,14 +40,28 @@
       </dict>
       <dict>
         <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <false/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>notUseBackdrop</string>
+        <key>label</key>
+        <string>Use Backdrop effect</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
         <string>PSGroupCell</string>
         <key>label</key>
       	<string>Temporary hide the blur views</string>
         <key>footerText</key>
-        <string>Hide in effects view - Hide blur effect of the bar(s) when the effects selector view is active.
-Hide in video - Hide blur effect of the bar(s) when recording video.
-Hide in pano - Hide blur effect of the bar(s) when capturing panorama.
-TB = Top Bar, BB = Bottom Bar</string>
+        <string>⚪ Hide in effects view - Hide blur effect of the bar(s) when the effects selector view is active.
+🔴 Hide in video - Hide blur effect of the bar(s) when recording video.
+🔵 Hide in pano - Hide blur effect of the bar(s) when capturing panorama.
+⚫ TB = Top Bar, BB = Bottom Bar</string>
       </dict>
       <dict>
         <key>cell</key>
