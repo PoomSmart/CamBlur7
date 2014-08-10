@@ -67,8 +67,7 @@ static void CB7Loader()
 	#define FloatOpt(option) \
 		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] floatValue] : 0.35;
 	BoolOpt(blur)
-	BoolOpt(notUseBackdrop)
-	notUseBackdrop = !notUseBackdrop;
+	notUseBackdrop = [dict objectForKey:@"notUseBackdrop"] ? ![[dict objectForKey:@"notUseBackdrop"] boolValue] : YES;
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
 	BoolOpt(handleVideoTB)
