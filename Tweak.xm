@@ -4,6 +4,7 @@
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
 #define PreferencesChangedNotification "com.PS.CamBlur7.prefs"
+#define isiOS8 (kCFCoreFoundationVersionNumber >= 1140.0)
 #define PH_BAR_HEIGHT 90
 
 static BOOL pf = NO;
@@ -40,10 +41,18 @@ static NSString *quality = CKBlurViewQualityDefault;
 @end
 
 @interface PLCameraView : UIView
-@property(readonly, assign, nonatomic) CAMTopBar* _topBar;
+@property(readonly, assign, nonatomic) CAMTopBar *_topBar;
+@end
+
+@interface CAMCameraView : UIView
+@property(readonly, assign, nonatomic) CAMTopBar *_topBar;
 @end
 
 @interface PLCameraEffectsRenderer
+@property(assign, nonatomic, getter=isShowingGrid) BOOL showGrid;
+@end
+
+@interface CAMEffectsRenderer
 @property(assign, nonatomic, getter=isShowingGrid) BOOL showGrid;
 @end
 
@@ -51,6 +60,13 @@ static NSString *quality = CKBlurViewQualityDefault;
 @property(retain) PLCameraEffectsRenderer *effectsRenderer;
 + (PLCameraController *)sharedInstance;
 - (PLCameraView *)delegate;
+- (BOOL)isCapturingVideo;
+@end
+
+@interface CAMCameraController : NSObject
+@property(retain) CAMEffectsRenderer *effectsRenderer;
++ (CAMCameraController *)sharedInstance;
+- (CAMCameraView *)delegate;
 - (BOOL)isCapturingVideo;
 @end
 
@@ -187,7 +203,7 @@ static void releaseBlurBars2()
 
 %group CKCB7BlurView
 
-%hook PLCameraController
+%hook CameraController
 
 - (void)_setCameraMode:(int)mode cameraDevice:(int)device
 {
@@ -195,7 +211,7 @@ static void releaseBlurBars2()
 	if (pf) {
 		CGSize size = blurBar.frame.size;
 		CGRect frame = CGRectMake(0, 0, size.width, device == 0 ? PH_BAR_HEIGHT : 40);
-		[[self delegate]._topBar updateSize:frame];
+		[[[self delegate] _topBar] updateSize:frame];
 	}
 }
 
@@ -219,7 +235,8 @@ static void releaseBlurBars2()
 - (void)_layoutForVerticalOrientation
 {
 	%orig;
-	if (([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[%c(PLCameraController) sharedInstance] isCapturingVideo] && handleVideoBB))
+	Class CameraController = isiOS8 ? objc_getClass("CAMCameraController") : objc_getClass("PLCameraController");
+	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[%c(PLCameraController) sharedInstance] isCapturingVideo] && handleVideoBB))
 		return;
 	if (blurBar2 != nil) {
 		releaseBlurBars2();
@@ -301,7 +318,7 @@ static void releaseBlurBars2()
 
 %end
 
-%hook PLCameraView
+%hook CameraView
 
 - (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
 {
@@ -376,9 +393,9 @@ static void releaseBlurBars2()
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChangedCallback, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	CB7Loader();
 	if (blur) {
-		%init(Common);
+		%init(Common, CameraView = isiOS8 ? objc_getClass("CAMCameraView") : objc_getClass("PLCameraView"));
 		if (notUseBackdrop) {
-			%init(CKCB7BlurView);
+			%init(CKCB7BlurView, CameraController = isiOS8 ? objc_getClass("CAMCameraController") : objc_getClass("PLCameraController"));
 		}
 	}
 	[pool drain];
