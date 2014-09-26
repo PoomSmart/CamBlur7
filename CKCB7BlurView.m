@@ -49,7 +49,7 @@ static NSString * const CKBlurViewHardEdgesKey = @"inputHardEdges";
     self = [super initWithFrame:frame];
     if (self) {
         CAFilter *filter = [CAFilter filterWithName:kCAFilterGaussianBlur];
-        self.layer.filters = @[ filter ];
+        self.layer.filters = @[filter];
         self.blurFilter = filter;
 
         self.blurQuality = CKBlurViewQualityDefault;
@@ -97,7 +97,7 @@ static NSString * const CKBlurViewHardEdgesKey = @"inputHardEdges";
 - (void)setTintColorFilter:(CAFilter *)filter
 {
     self.colorFilter = filter;
-    self.layer.filters = @[ self.colorFilter , self.blurFilter ];
+    self.layer.filters = @[self.colorFilter, self.blurFilter];
 }
 
 - (BOOL)blurEdges

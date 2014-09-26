@@ -11,10 +11,10 @@ CamBlur7_PRIVATE_FRAMEWORKS = QuartzCore
 include $(THEOS_MAKE_PATH)/tweak.mk
 	
 BUNDLE_NAME = CamBlur7Settings
-CamBlur7Settings_FILES = CB7PreferenceController.m
+CamBlur7Settings_FILES = CB7PreferenceController.m NKOColorPickerView.m
 CamBlur7Settings_INSTALL_PATH = /Library/PreferenceBundles
 CamBlur7Settings_PRIVATE_FRAMEWORKS = Preferences
-CamBlur7Settings_FRAMEWORKS = UIKit
+CamBlur7Settings_FRAMEWORKS = CoreGraphics Social UIKit
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 

@@ -1,16 +1,17 @@
 #import "Backdrop.h"
 #import "CKCB7BlurView.h"
+#import "../PS.h"
 #import <CoreGraphics/CoreGraphics.h>
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
 #define PreferencesChangedNotification "com.PS.CamBlur7.prefs"
-#define isiOS8 (kCFCoreFoundationVersionNumber >= 1140.0)
-#define PH_BAR_HEIGHT 90
 
 static BOOL pf = NO;
 static BOOL notUseBackdrop = YES;
 
 static BOOL blur;
+static BOOL blurTop;
+static BOOL blurBottom;
 static BOOL handleEffectTB;
 static BOOL handleEffectBB;
 static BOOL handleVideoTB;
@@ -18,13 +19,13 @@ static BOOL handleVideoBB;
 static BOOL handlePanoTB;
 static BOOL handlePanoBB;
 
-static float blurAmount;
-static float tR;
-static float tG;
-static float tB;
-static float bR;
-static float bG;
-static float bB;
+static CGFloat blurAmount;
+static CGFloat HuetopBar;
+static CGFloat SattopBar;
+static CGFloat BritopBar;
+static CGFloat HuebottomBar;
+static CGFloat SatbottomBar;
+static CGFloat BribottomBar;
 
 static NSString *quality = CKBlurViewQualityDefault;
 
@@ -63,9 +64,9 @@ static NSString *quality = CKBlurViewQualityDefault;
 - (BOOL)isCapturingVideo;
 @end
 
-@interface CAMCameraController : NSObject
+@interface CAMCaptureController : NSObject
 @property(retain) CAMEffectsRenderer *effectsRenderer;
-+ (CAMCameraController *)sharedInstance;
++ (CAMCaptureController *)sharedInstance;
 - (CAMCameraView *)delegate;
 - (BOOL)isCapturingVideo;
 @end
@@ -83,22 +84,24 @@ static void CB7Loader()
 	#define FloatOpt(option) \
 		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] floatValue] : 0.35;
 	BoolOpt(blur)
-	notUseBackdrop = [dict objectForKey:@"notUseBackdrop"] ? ![[dict objectForKey:@"notUseBackdrop"] boolValue] : YES;
+	BoolOpt(blurTop)
+	BoolOpt(blurBottom)
+	notUseBackdrop = dict [@"notUseBackdrop"] ? ![dict[@"notUseBackdrop"] boolValue] : YES;
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
 	BoolOpt(handleVideoTB)
 	BoolOpt(handleVideoBB)
 	BoolOpt(handlePanoTB)
 	BoolOpt(handlePanoBB)
-	FloatOpt(tR)
-	FloatOpt(tG)
-	FloatOpt(tB)
-	FloatOpt(bR)
-	FloatOpt(bG)
-	FloatOpt(bB)
-	int value = [dict objectForKey:@"Quality"] != nil ? [[dict objectForKey:@"Quality"] intValue] : 0;
+	FloatOpt(HuetopBar)
+	FloatOpt(SattopBar)
+	FloatOpt(BritopBar)
+	FloatOpt(HuebottomBar)
+	FloatOpt(SatbottomBar)
+	FloatOpt(BribottomBar)
+	int value = dict[@"Quality"] != nil ? [dict[@"Quality"] intValue] : 0;
 	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
-	blurAmount = [dict objectForKey:@"blurAmount"] ? [[dict objectForKey:@"blurAmount"] floatValue] : 20.0f;
+	blurAmount = dict[@"blurAmount"] ? [dict[@"blurAmount"] floatValue] : 20.0f;
 }
 
 
@@ -112,9 +115,9 @@ static void setBlurBarColor(id bar, BOOL top)
 {
 	UIColor *blurTint = nil;
 	if (top)
-		blurTint = [UIColor colorWithRed:tR green:tG blue:tB alpha:1];
+		blurTint = [UIColor colorWithHue:HuetopBar saturation:SattopBar brightness:BritopBar alpha:1];
 	else
-		blurTint = [UIColor colorWithRed:bR green:bG blue:bB alpha:1];
+		blurTint = [UIColor colorWithHue:HuebottomBar saturation:SatbottomBar brightness:BribottomBar alpha:1];
 	if ([NSStringFromClass([bar class]) isEqualToString:@"_UIBackdropView"]) {
 		[((_UIBackdropView *)bar).inputSettings setColorTint:blurTint];
 		[((_UIBackdropView *)bar).outputSettings setColorTint:blurTint];
@@ -235,10 +238,10 @@ static void releaseBlurBars2()
 - (void)_layoutForVerticalOrientation
 {
 	%orig;
-	Class CameraController = isiOS8 ? objc_getClass("CAMCameraController") : objc_getClass("PLCameraController");
-	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[%c(PLCameraController) sharedInstance] isCapturingVideo] && handleVideoBB))
+	Class CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController");
+	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[CameraController sharedInstance] isCapturingVideo] && handleVideoBB))
 		return;
-	if (blurBar2 != nil) {
+	if (blurBar2 != nil && blurBottom) {
 		releaseBlurBars2();
 		CGSize size = self.frame.size;
 		CGRect frame = CGRectMake(0, 0, size.width, size.height);
@@ -250,9 +253,10 @@ static void releaseBlurBars2()
 - (void)_layoutForHorizontalOrientation
 {
 	%orig;
-	if (([[%c(PLCameraController) sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[%c(PLCameraController) sharedInstance] isCapturingVideo] && handleVideoBB))
+	Class CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController");
+	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[CameraController sharedInstance] isCapturingVideo] && handleVideoBB))
 		return;
-	if (blurBar2 != nil) {
+	if (blurBar2 != nil && blurBottom) {
 		releaseBlurBars2();
 		CGSize size = self.frame.size;
 		CGRect frame = CGRectMake(0, 0, size.width, size.height);
@@ -272,6 +276,8 @@ static void releaseBlurBars2()
 - (void)_commonCAMTopBarInitialization
 {
 	%orig;
+	if (!blurTop)
+		return;
 	pf = NO;
 	if ([[[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.PS.PhotoFlash.plist"] objectForKey:@"PFEnabled"] boolValue] &&
 		dlopen("/Library/MobileSubstrate/DynamicLibraries/PhotoFlash.dylib", RTLD_LAZY) != NULL)
@@ -301,6 +307,8 @@ static void releaseBlurBars2()
 - (void)_commonCAMBottomBarInitialization
 {
 	%orig;
+	if (!blurBottom)
+		return;
 	if (!notUseBackdrop) {
 		createBackdropBar2();
 		[self addSubview:backdropBar2];
@@ -395,7 +403,7 @@ static void releaseBlurBars2()
 	if (blur) {
 		%init(Common, CameraView = isiOS8 ? objc_getClass("CAMCameraView") : objc_getClass("PLCameraView"));
 		if (notUseBackdrop) {
-			%init(CKCB7BlurView, CameraController = isiOS8 ? objc_getClass("CAMCameraController") : objc_getClass("PLCameraController"));
+			%init(CKCB7BlurView, CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController"));
 		}
 	}
 	[pool drain];

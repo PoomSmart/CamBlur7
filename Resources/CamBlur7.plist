@@ -22,7 +22,7 @@
       	<string>Blur Effect</string>
         <key>footerText</key>
         <string>This tweak blurs a camera top bar and bottom bar.
-❗ If Use Backdrop effect option is enabled, the camera bars will be blurry and act just like iOS 7 blurry UI.</string>
+❗ If Use Backdrop effect option is enabled, the camera bars will be blurry and act just like iOS 7+ blurry UI.</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -49,6 +49,42 @@
         <string>notUseBackdrop</string>
         <key>label</key>
         <string>Use Backdrop effect</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>blurTop</string>
+        <key>key</key>
+        <string>blurTop</string>
+        <key>label</key>
+        <string>Blur Top Bar</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>blurBottom</string>
+        <key>key</key>
+        <string>blurBottom</string>
+        <key>label</key>
+        <string>Blur Bottom Bar</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
@@ -151,9 +187,7 @@
         <key>cell</key>
         <string>PSGroupCell</string>
         <key>label</key>
-      	<string>Blur Radius</string>
-        <key>footerText</key>
-        <string>Set blur amount.</string>
+      	<string>Blur Amount</string>
       </dict>
       <dict>
 			<key>PostNotification</key>
@@ -177,126 +211,34 @@
         <key>cell</key>
         <string>PSGroupCell</string>
         <key>label</key>
-        <string>Top Blur Color (RGB)</string>
-        <key>footerText</key>
-        <string>Set the camera top bar blur color.</string>
+        <string>Top Bar Blur Color</string>
       </dict>
-      <dict>
-			<key>PostNotification</key>
-			<string>com.PS.CamBlur7.prefs</string>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<real>1.0</real>
-			<key>defaults</key>
-			<string>com.PS.CamBlur7</string>
-			<key>key</key>
-			<string>tR</string>
-			<key>max</key>
-			<real>1.0</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>showValue</key>
-			<true/>
-		</dict>
-		<dict>
-			<key>PostNotification</key>
-			<string>com.PS.CamBlur7.prefs</string>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<real>1.0</real>
-			<key>defaults</key>
-			<string>com.PS.CamBlur7</string>
-			<key>key</key>
-			<string>tG</string>
-			<key>max</key>
-			<real>1.0</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>showValue</key>
-			<true/>
-		</dict>
-		<dict>
-			<key>PostNotification</key>
-			<string>com.PS.CamBlur7.prefs</string>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<real>1.0</real>
-			<key>defaults</key>
-			<string>com.PS.CamBlur7</string>
-			<key>key</key>
-			<string>tB</string>
-			<key>max</key>
-			<real>1.0</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>showValue</key>
-			<true/>
-		</dict>
+     	<dict>
+      		<key>cell</key>
+      		<string>PSButtonCell</string>
+      		<key>id</key>
+      		<string>topBar</string>
+      		<key>action</key>
+      		<string>showColorPicker:</string>
+      		<key>label</key>
+      		<string>Select Color</string>
+      </dict>
 		<dict>
         <key>cell</key>
         <string>PSGroupCell</string>
         <key>label</key>
-        <string>Bottom Blur Color (RGB)</string>
-        <key>footerText</key>
-        <string>Set the camera bottom bar blur color.</string>
+        <string>Bottom Bar Blur Color</string>
       </dict>
       <dict>
-			<key>PostNotification</key>
-			<string>com.PS.CamBlur7.prefs</string>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<real>1.0</real>
-			<key>defaults</key>
-			<string>com.PS.CamBlur7</string>
-			<key>key</key>
-			<string>bR</string>
-			<key>max</key>
-			<real>1.0</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>showValue</key>
-			<true/>
-		</dict>
-		<dict>
-			<key>PostNotification</key>
-			<string>com.PS.CamBlur7.prefs</string>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<real>1.0</real>
-			<key>defaults</key>
-			<string>com.PS.CamBlur7</string>
-			<key>key</key>
-			<string>bG</string>
-			<key>max</key>
-			<real>1.0</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>showValue</key>
-			<true/>
-		</dict>
-		<dict>
-			<key>PostNotification</key>
-			<string>com.PS.CamBlur7.prefs</string>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<real>1.0</real>
-			<key>defaults</key>
-			<string>com.PS.CamBlur7</string>
-			<key>key</key>
-			<string>bB</string>
-			<key>max</key>
-			<real>1.0</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>showValue</key>
-			<true/>
-		</dict>
+      		<key>cell</key>
+      		<string>PSButtonCell</string>
+      		<key>id</key>
+      		<string>bottomBar</string>
+      		<key>action</key>
+      		<string>showColorPicker:</string>
+      		<key>label</key>
+      		<string>Select Color</string>
+      </dict>
 		<dict>
       		<key>cell</key>
       		<string>PSGroupCell</string>
@@ -339,11 +281,21 @@
       		<key>action</key>
       		<string>donate:</string>
       		<key>label</key>
-      		<string>Donate ^^</string>
+      		<string>♥ Donate</string>
+      </dict>
+      <dict>
+      		<key>cell</key>
+      		<string>PSButtonCell</string>
+      		<key>action</key>
+      		<string>twitter:</string>
+      		<key>label</key>
+      		<string>🔗 Developer's Twitter</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSGroupCell</string>
+        <key>footerAlignment</key>
+        <integer>1</integer>
         <key>footerText</key>
         <string>© 2013 - 2014 Thuchapol Unprasert
 (@PoomSmart)</string>
