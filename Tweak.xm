@@ -1,10 +1,8 @@
 #import "Backdrop.h"
 #import "CKCB7BlurView.h"
+#import "Common.h"
 #import "../PS.h"
 #import <CoreGraphics/CoreGraphics.h>
-
-#define PREF_PATH @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist"
-#define PreferencesChangedNotification "com.PS.CamBlur7.prefs"
 
 static BOOL pf = NO;
 static BOOL notUseBackdrop = YES;
@@ -80,13 +78,13 @@ static void CB7Loader()
 {
 	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
 	#define BoolOpt(option) \
-		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] boolValue] : YES;
+		option = dict[[NSString stringWithUTF8String:#option]] ? [dict[[NSString stringWithUTF8String:#option]] boolValue] : YES;
 	#define FloatOpt(option) \
-		option = [dict objectForKey:[NSString stringWithUTF8String:#option]] ? [[dict objectForKey:[NSString stringWithUTF8String:#option]] floatValue] : 0.35;
+		option = dict[[NSString stringWithUTF8String:#option]] ? [dict[[NSString stringWithUTF8String:#option]] floatValue] : 0.35;
 	BoolOpt(blur)
 	BoolOpt(blurTop)
 	BoolOpt(blurBottom)
-	notUseBackdrop = dict [@"notUseBackdrop"] ? ![dict[@"notUseBackdrop"] boolValue] : YES;
+	notUseBackdrop = dict[@"notUseBackdrop"] ? ![dict[@"notUseBackdrop"] boolValue] : YES;
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
 	BoolOpt(handleVideoTB)
@@ -99,7 +97,7 @@ static void CB7Loader()
 	FloatOpt(HuebottomBar)
 	FloatOpt(SatbottomBar)
 	FloatOpt(BribottomBar)
-	int value = dict[@"Quality"] != nil ? [dict[@"Quality"] intValue] : 0;
+	int value = dict[QualityKey] != nil ? [dict[QualityKey] intValue] : 0;
 	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
 	blurAmount = dict[@"blurAmount"] ? [dict[@"blurAmount"] floatValue] : 20.0f;
 }
@@ -401,6 +399,8 @@ static void releaseBlurBars2()
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChangedCallback, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	CB7Loader();
 	if (blur) {
+		dlopen("/System/Library/PrivateFrameworks/PhotoLibrary.framework/PhotoLibrary", RTLD_LAZY);
+		dlopen("/System/Library/PrivateFrameworks/CameraKit.framework/CameraKit", RTLD_LAZY);
 		%init(Common, CameraView = isiOS8 ? objc_getClass("CAMCameraView") : objc_getClass("PLCameraView"));
 		if (notUseBackdrop) {
 			%init(CKCB7BlurView, CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController"));

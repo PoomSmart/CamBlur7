@@ -21,8 +21,7 @@
         <key>label</key>
       	<string>Blur Effect</string>
         <key>footerText</key>
-        <string>This tweak blurs a camera top bar and bottom bar.
-❗ If Use Backdrop effect option is enabled, the camera bars will be blurry and act just like iOS 7+ blurry UI.</string>
+        <string>❗ If Use Backdrop effect option is enabled, the camera bars blur style will be backdrop. (iOS common blurring method)</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -53,8 +52,20 @@
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
       <dict>
+			<key>cell</key>
+			<string>PSTableCell</string>
+			<key>cellClass</key>
+      		<string>BlurQualityCell</string>
+      		<key>label</key>
+      		<string>Blur Quality</string>
+		</dict>
+      <dict>
         <key>cell</key>
         <string>PSGroupCell</string>
+        <key>label</key>
+        <string>Top Bar</string>
+        <key>id</key>
+        <string>topBar1</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -64,11 +75,11 @@
         <key>defaults</key>
         <string>com.PS.CamBlur7</string>
         <key>id</key>
-        <string>blurTop</string>
+        <string>topBar2</string>
         <key>key</key>
         <string>blurTop</string>
         <key>label</key>
-        <string>Blur Top Bar</string>
+        <string>Blur</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
@@ -80,36 +91,11 @@
         <key>defaults</key>
         <string>com.PS.CamBlur7</string>
         <key>id</key>
-        <string>blurBottom</string>
-        <key>key</key>
-        <string>blurBottom</string>
-        <key>label</key>
-        <string>Blur Bottom Bar</string>
-        <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>label</key>
-      	<string>Temporary hide the blur views</string>
-        <key>footerText</key>
-        <string>⚪ Hide in effects view - Hide blur effect of the bar(s) when the effects selector view is active.
-🔴 Hide in video - Hide blur effect of the bar(s) when recording video.
-🔵 Hide in pano - Hide blur effect of the bar(s) when capturing panorama.
-⚫ TB = Top Bar, BB = Bottom Bar</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSSwitchCell</string>
-        <key>default</key>
-        <true/>
-        <key>defaults</key>
-        <string>com.PS.CamBlur7</string>
+        <string>topBar3</string>
         <key>key</key>
         <string>handleEffectTB</string>
         <key>label</key>
-        <string>Hide in effects view (TB)</string>
+        <string>Hide when effects</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
@@ -120,24 +106,12 @@
         <true/>
         <key>defaults</key>
         <string>com.PS.CamBlur7</string>
-        <key>key</key>
-        <string>handleEffectBB</string>
-        <key>label</key>
-        <string>Hide in effects view (BB)</string>
-        <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSSwitchCell</string>
-        <key>default</key>
-        <true/>
-        <key>defaults</key>
-        <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>topBar4</string>
         <key>key</key>
         <string>handleVideoTB</string>
         <key>label</key>
-        <string>Hide in video (TB)</string>
+        <string>Hide when video</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
@@ -148,24 +122,48 @@
         <true/>
         <key>defaults</key>
         <string>com.PS.CamBlur7</string>
-        <key>key</key>
-        <string>handleVideoBB</string>
-        <key>label</key>
-        <string>Hide in video (BB)</string>
-        <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSSwitchCell</string>
-        <key>default</key>
-        <true/>
-        <key>defaults</key>
-        <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>topBar5</string>
         <key>key</key>
         <string>handlePanoTB</string>
         <key>label</key>
-        <string>Hide in pano (TB)</string>
+        <string>Hide when pano</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+      		<key>cell</key>
+      		<string>PSTableCell</string>
+      		<key>id</key>
+      		<string>topBar</string>
+      		<key>cellClass</key>
+      		<string>CB7ColorCell</string>
+      		<key>action</key>
+      		<string>showColorPicker:</string>
+      		<key>label</key>
+      		<string>Blur Color</string>
+      </dict>
+		<dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>Bottom Bar</string>
+        <key>id</key>
+        <string>bottomBar1</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>bottomBar2</string>
+        <key>key</key>
+        <string>blurBottom</string>
+        <key>label</key>
+        <string>Blur</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
@@ -176,12 +174,68 @@
         <true/>
         <key>defaults</key>
         <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>bottomBar3</string>
+        <key>key</key>
+        <string>handleEffectBB</string>
+        <key>label</key>
+        <string>Hide when effects</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>bottomBar4</string>
+        <key>key</key>
+        <string>handleVideoBB</string>
+        <key>label</key>
+        <string>Hide when video</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>id</key>
+        <string>bottomBar5</string>
         <key>key</key>
         <string>handlePanoBB</string>
         <key>label</key>
-        <string>Hide in pano (BB)</string>
+        <string>Hide when pano</string>
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
+      <dict>
+      		<key>cell</key>
+      		<string>PSTableCell</string>
+      		<key>id</key>
+      		<string>bottomBar</string>
+      		<key>cellClass</key>
+      		<string>CB7ColorCell</string>
+      		<key>action</key>
+      		<string>showColorPicker:</string>
+      		<key>label</key>
+      		<string>Blur Color</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+      	<string>Note about hiding options</string>
+        <key>footerText</key>
+        <string>⚪ Hide when effects - Hide blur effect of the bar(s) when the effects selector view is active.
+🔴 Hide when video - Hide blur effect of the bar(s) when recording video.
+🔵 Hide when pano - Hide blur effect of the bar(s) when capturing panorama.</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -201,75 +255,11 @@
 			<key>key</key>
 			<string>blurAmount</string>
 			<key>max</key>
-			<real>200.0</real>
+			<real>150.0</real>
 			<key>min</key>
 			<real>0.0</real>
 			<key>showValue</key>
 			<true/>
-		</dict>
-		<dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>label</key>
-        <string>Top Bar Blur Color</string>
-      </dict>
-     	<dict>
-      		<key>cell</key>
-      		<string>PSButtonCell</string>
-      		<key>id</key>
-      		<string>topBar</string>
-      		<key>action</key>
-      		<string>showColorPicker:</string>
-      		<key>label</key>
-      		<string>Select Color</string>
-      </dict>
-		<dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>label</key>
-        <string>Bottom Bar Blur Color</string>
-      </dict>
-      <dict>
-      		<key>cell</key>
-      		<string>PSButtonCell</string>
-      		<key>id</key>
-      		<string>bottomBar</string>
-      		<key>action</key>
-      		<string>showColorPicker:</string>
-      		<key>label</key>
-      		<string>Select Color</string>
-      </dict>
-		<dict>
-      		<key>cell</key>
-      		<string>PSGroupCell</string>
-      		<key>label</key>
-        	<string>Blur Quality</string>
-      		<key>footerText</key>
-      		<string>From here you can choose the blur effect quality.</string>
-      </dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>defaults</key>
-			<string>com.PS.CamBlur7</string>
-			<key>PostNotification</key>
-        	<string>com.PS.CamBlur7.prefs</string>
-			<key>detail</key>
-			<string>PSListItemsController</string>
-			<key>key</key>
-			<string>Quality</string>
-			<key>label</key>
-			<string>Select</string>
-			<key>validTitles</key>
-			<array>
-				<string>low</string>
-				<string>default</string>
-			</array>
-			<key>validValues</key>
-			<array>
-				<integer>1</integer>
-				<integer>0</integer>
-			</array>
 		</dict>
 		<dict>
       		<key>cell</key>
