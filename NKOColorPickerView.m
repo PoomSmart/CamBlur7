@@ -28,16 +28,13 @@
 //
 
 #import "NKOColorPickerView.h"
+#import "../PS.h"
 
 //NKOBrightnessView
 @interface NKOBrightnessView: UIView
 
 @property (nonatomic, strong) UIColor *color;
 
-@end
-
-@interface UIImage (Addition)
-+ (UIImage *)imageNamed:(NSString *)name inBundle:(NSBundle *)bundle;
 @end
 
 //UIImage category
@@ -65,13 +62,14 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
 @property (nonatomic, strong) NKOBrightnessView *gradientView;
 @property (nonatomic, strong) UIImageView *brightnessIndicator;
 @property (nonatomic, strong) UIImageView *hueSatImage;
+@property (nonatomic, strong) UIView *overlayView;
 @property (nonatomic, strong) UIView *crossHairs;
 
 @end
 
 @implementation NKOColorPickerView
 
-- (id)initWithFrame:(CGRect)frame color:(UIColor*)color identifier:(NSString *)identifier andDidChangeColorBlock:(NKOColorPickerDidChangeColorBlock)didChangeColorBlock
+- (id)initWithFrame:(CGRect)frame color:(UIColor*)color identifier:(NSString *)identifier delegate:(id)delegate
 {
     self = [super init];
     
@@ -79,14 +77,14 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
         self.frame = frame;
         
         self->_color = color;
-        self->_didChangeColorBlock = didChangeColorBlock;
+        self->_delegate = delegate;
         self->_identifier = identifier;
     }
     
     return self;
 }
 
-- (NSBundle *)cb7Bundle
+- (NSBundle *)frontFlashBundle
 {
 	return [NSBundle bundleWithPath:@"/Library/PreferenceBundles/CamBlur7Settings.bundle"];
 }
@@ -106,6 +104,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
     [self _updateBrightnessPosition];
     [self _updateGradientColor];
     [self _updateCrosshairPosition];
+    self.crossHairs.layer.backgroundColor = _color.CGColor;
 }
 
 - (void)layoutSubviews
@@ -131,26 +130,27 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
 {
     self.hueSatImage.layer.borderColor = tintColor.CGColor;
     self.gradientView.layer.borderColor = tintColor.CGColor;
-    self.brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self cb7Bundle]] nko_tintImageWithColor:tintColor];
+    self.brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self frontFlashBundle]] nko_tintImageWithColor:tintColor];
 }
 
 - (void)setColor:(UIColor *)newColor
 {
     CGFloat hue, saturation;
     [newColor getHue:&hue saturation:&saturation brightness:nil alpha:nil];
-
     currentHue = hue;
     currentSaturation = saturation;
     [self _setColor:newColor];
     [self _updateGradientColor];
     [self _updateBrightnessPosition];
     [self _updateCrosshairPosition];
+    self.crossHairs.layer.backgroundColor = newColor.CGColor;
 }
 
 #pragma mark - Private methods
 - (void)_setColor:(UIColor *)newColor
 {
     if (![_color isEqual:newColor]){
+    	self.crossHairs.layer.backgroundColor = newColor.CGColor;
         CGFloat brightness;
         [newColor getHue:NULL saturation:NULL brightness:&brightness alpha:NULL];
         CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(newColor.CGColor));
@@ -165,8 +165,8 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
             _color = [newColor copy];
         }
         
-        if (self.didChangeColorBlock != nil && self.identifier != nil){
-            self.didChangeColorBlock(self.color, self.identifier);
+        if (self.delegate != nil){
+            [self.delegate colorDidChange:self.color identifier:self.identifier];
         }
     }
 }
@@ -178,7 +178,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
     CGPoint brightnessPosition;
     brightnessPosition.x = (1.0-currentBrightness)*self.gradientView.frame.size.width + self.gradientView.frame.origin.x;
     brightnessPosition.y = self.gradientView.center.y;
-    
+    self.overlayView.alpha = 1.0-currentBrightness;
     self.brightnessIndicator.center = brightnessPosition;
 }
 
@@ -190,6 +190,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
     hueSatPosition.y = (1.0-currentSaturation) * self.hueSatImage.frame.size.height + self.hueSatImage.frame.origin.y;
     
     self.crossHairs.center = hueSatPosition;
+    self.crossHairs.layer.backgroundColor = _color.CGColor;
     [self _updateGradientColor];
 }
 
@@ -200,7 +201,6 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
                                         brightness:1.0
                                              alpha:1.0];
 	
-    self.crossHairs.layer.backgroundColor = gradientColor.CGColor;
     
 	[self.gradientView setColor:gradientColor];
 }
@@ -229,7 +229,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
 - (void)_updateBrightnessWithMovement:(CGPoint)position
 {
 	currentBrightness = 1.0 - ((position.x - self.gradientView.frame.origin.x)/self.gradientView.frame.size.width) ;
-	
+	self.overlayView.alpha = 1.0-currentBrightness;
 	UIColor *_tcolor = [UIColor colorWithHue:currentHue
                                   saturation:currentSaturation
                                   brightness:currentBrightness
@@ -239,10 +239,6 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
 
 - (UIColor*)_defaultTintColor
 {
-   /* UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-    if ([window respondsToSelector:@selector(tintColor)]) {
-        return [window tintColor];
-    }*/
     return [UIColor whiteColor];
 }
 
@@ -301,7 +297,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
 - (UIImageView*)hueSatImage
 {
     if (self->_hueSatImage == nil){
-        self->_hueSatImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"nko_colormap.png" inBundle:[self cb7Bundle]]];
+        self->_hueSatImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"nko_colormap.png" inBundle:[self frontFlashBundle]]];
         self->_hueSatImage.frame = CGRectMake(NKOPickerViewDefaultMargin,
                                               NKOPickerViewDefaultMargin,
                                               CGRectGetWidth(self.frame) - (NKOPickerViewDefaultMargin*2),
@@ -315,8 +311,19 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
         self->_hueSatImage.layer.masksToBounds = YES;
     }
     
+    if (self->_overlayView == nil) {
+    	self->_overlayView = [[UIView alloc] initWithFrame:self->_hueSatImage.frame];
+    	self->_overlayView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    	self->_overlayView.layer.cornerRadius = 6.f;
+    	self->_overlayView.backgroundColor = [UIColor blackColor];
+    	self->_overlayView.alpha = 1;
+    }
+    
     if (self->_hueSatImage.superview == nil){
         [self addSubview:self->_hueSatImage];
+    }
+    if (self->_overlayView.superview == nil){
+        [self insertSubview:self->_overlayView aboveSubview:self->_hueSatImage];
     }
     
     return self->_hueSatImage;
@@ -344,7 +351,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
     }
     
     if (self->_crossHairs.superview == nil){
-        [self insertSubview:self->_crossHairs aboveSubview:self.hueSatImage];
+        [self insertSubview:self->_crossHairs aboveSubview:self.overlayView];
     }
     
     return self->_crossHairs;
@@ -358,7 +365,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
                                                                                    NKOPickerViewBrightnessIndicatorWidth,
                                                                                    NKOPickerViewBrightnessIndicatorHeight)];
         
-        self->_brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self cb7Bundle]] nko_tintImageWithColor:[self _defaultTintColor]];
+        self->_brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self frontFlashBundle]] nko_tintImageWithColor:[self _defaultTintColor]];
         self->_brightnessIndicator.backgroundColor = [UIColor clearColor];
         self->_brightnessIndicator.autoresizingMask = UIViewAutoresizingNone;
     }

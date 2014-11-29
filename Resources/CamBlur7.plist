@@ -26,6 +26,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -37,21 +39,7 @@
         <key>PostNotification</key>
 		<string>com.PS.CamBlur7.prefs</string>
       </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSSwitchCell</string>
-        <key>default</key>
-        <false/>
-        <key>defaults</key>
-        <string>com.PS.CamBlur7</string>
-        <key>key</key>
-        <string>notUseBackdrop</string>
-        <key>label</key>
-        <string>Use Backdrop effect</string>
-        <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
-      </dict>
-      <dict>
+       <dict>
 			<key>cell</key>
 			<string>PSTableCell</string>
 			<key>cellClass</key>
@@ -59,6 +47,22 @@
       		<key>label</key>
       		<string>Blur Quality</string>
 		</dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
+        <key>default</key>
+        <false/>
+        <key>defaults</key>
+        <string>com.PS.CamBlur7</string>
+        <key>key</key>
+        <string>useBackdrop</string>
+        <key>label</key>
+        <string>Use Backdrop effect</string>
+        <key>PostNotification</key>
+		<string>com.PS.CamBlur7.prefs</string>
+      </dict>
       <dict>
         <key>cell</key>
         <string>PSGroupCell</string>
@@ -70,6 +74,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -86,6 +92,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -102,6 +110,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -118,6 +128,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -154,6 +166,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -170,6 +184,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -186,6 +202,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -202,6 +220,8 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
+        <key>cellClass</key>
+        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -287,7 +307,7 @@
         <key>footerAlignment</key>
         <integer>1</integer>
         <key>footerText</key>
-        <string>© 2013 - 2014 Thuchapol Unprasert
+        <string>© 2013 - 2014 Thatchapon Unprasert
 (@PoomSmart)</string>
       </dict>
     </array>

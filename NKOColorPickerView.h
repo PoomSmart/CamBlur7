@@ -29,15 +29,14 @@
 
 #import <UIKit/UIKit.h>
 
-typedef void (^NKOColorPickerDidChangeColorBlock)(UIColor *color, NSString *identifier);
 
 @interface NKOColorPickerView : UIView
 
-@property (nonatomic, strong) NKOColorPickerDidChangeColorBlock didChangeColorBlock;
 @property (nonatomic, strong) UIColor *color;
 @property (nonatomic, strong) NSString *identifier;
+@property (nonatomic, strong) id delegate;
 
-- (id)initWithFrame:(CGRect)frame color:(UIColor*)color identifier:(NSString *)identifier andDidChangeColorBlock:(NKOColorPickerDidChangeColorBlock)didChangeColorBlock;
+- (id)initWithFrame:(CGRect)frame color:(UIColor*)color identifier:(NSString *)identifier delegate:(id)delegate;
 
 @end
 

@@ -4,77 +4,27 @@
 #import "../PS.h"
 #import <CoreGraphics/CoreGraphics.h>
 
-static BOOL pf = NO;
-static BOOL notUseBackdrop = YES;
-
-static BOOL blur;
-static BOOL blurTop;
-static BOOL blurBottom;
-static BOOL handleEffectTB;
-static BOOL handleEffectBB;
-static BOOL handleVideoTB;
-static BOOL handleVideoBB;
-static BOOL handlePanoTB;
-static BOOL handlePanoBB;
-
-static CGFloat blurAmount;
-static CGFloat HuetopBar;
-static CGFloat SattopBar;
-static CGFloat BritopBar;
-static CGFloat HuebottomBar;
-static CGFloat SatbottomBar;
-static CGFloat BribottomBar;
-
-static NSString *quality = CKBlurViewQualityDefault;
-
-@interface CAMTopBar : UIView
-- (CGSize)sizeThatFits:(CGSize)fits;
-@end
-
-@interface CAMTopBar (CamBlur7)
-- (void)updateSize:(CGRect)frame;
-@end
-
-@interface CAMBottomBar : UIView
-- (CGSize)sizeThatFits:(CGSize)fits;
-@end
-
-@interface PLCameraView : UIView
-@property(readonly, assign, nonatomic) CAMTopBar *_topBar;
-@end
-
-@interface CAMCameraView : UIView
-@property(readonly, assign, nonatomic) CAMTopBar *_topBar;
-@end
-
-@interface PLCameraEffectsRenderer
-@property(assign, nonatomic, getter=isShowingGrid) BOOL showGrid;
-@end
-
-@interface CAMEffectsRenderer
-@property(assign, nonatomic, getter=isShowingGrid) BOOL showGrid;
-@end
-
-@interface PLCameraController : NSObject
-@property(retain) PLCameraEffectsRenderer *effectsRenderer;
-+ (PLCameraController *)sharedInstance;
-- (PLCameraView *)delegate;
-- (BOOL)isCapturingVideo;
-@end
-
-@interface CAMCaptureController : NSObject
-@property(retain) CAMEffectsRenderer *effectsRenderer;
-+ (CAMCaptureController *)sharedInstance;
-- (CAMCameraView *)delegate;
-- (BOOL)isCapturingVideo;
-@end
-
 static CKCB7BlurView *blurBar = nil;
 static CKCB7BlurView *blurBar2 = nil;
 static _UIBackdropView *backdropBar = nil;
 static _UIBackdropView *backdropBar2 = nil;
 
-static void CB7Loader()
+static BOOL pf = NO;
+static BOOL useBackdrop;
+
+static BOOL blur;
+static BOOL blurTop;
+static BOOL blurBottom;
+static BOOL handleEffectTB, handlePanoTB, handleVideoTB;
+static BOOL handleEffectBB, handlePanoBB, handleVideoBB;
+
+static CGFloat blurAmount;
+static CGFloat HuetopBar, SattopBar, BritopBar;
+static CGFloat HuebottomBar, SatbottomBar, BribottomBar;
+
+static NSString *quality = CKBlurViewQualityDefault;
+
+static void loadPrefs()
 {
 	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
 	#define BoolOpt(option) \
@@ -84,7 +34,7 @@ static void CB7Loader()
 	BoolOpt(blur)
 	BoolOpt(blurTop)
 	BoolOpt(blurBottom)
-	notUseBackdrop = dict[@"notUseBackdrop"] ? ![dict[@"notUseBackdrop"] boolValue] : YES;
+	useBackdrop = dict[@"useBackdrop"] ? [dict[@"useBackdrop"] boolValue] : NO;
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
 	BoolOpt(handleVideoTB)
@@ -100,13 +50,6 @@ static void CB7Loader()
 	int value = dict[QualityKey] != nil ? [dict[QualityKey] intValue] : 0;
 	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
 	blurAmount = dict[@"blurAmount"] ? [dict[@"blurAmount"] floatValue] : 20.0f;
-}
-
-
-static void PreferencesChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
-{
-	system("killall Camera");
-	CB7Loader();
 }
 
 static void setBlurBarColor(id bar, BOOL top)
@@ -131,7 +74,7 @@ static _UIBackdropViewSettings *backdropBlurSettings()
 {
 	_UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:0];
 	[settings setUsesColorTintView:YES];
-	[settings setColorTintAlpha:0.5];
+	[settings setColorTintAlpha:0.5f];
 	[settings setRequiresColorStatistics:YES];
 	[settings setBlurRadius:blurAmount];
 	[settings setBlurQuality:quality];
@@ -202,6 +145,19 @@ static void releaseBlurBars2()
 	}
 }
 
+static void showBar(BOOL show)
+{
+	BOOL hide = !show;
+	if (handleVideoTB) {
+		blurBar.hidden = hide;
+		backdropBar.hidden = hide;
+	}
+	if (handleVideoBB) {
+		blurBar2.hidden = hide;
+		backdropBar2.hidden = hide;
+	}
+}
+
 %group CKCB7BlurView
 
 %hook CameraController
@@ -210,9 +166,10 @@ static void releaseBlurBars2()
 {
 	%orig;
 	if (pf) {
+		CAMTopBar *topBar = [[self delegate] _topBar];
 		CGSize size = blurBar.frame.size;
 		CGRect frame = CGRectMake(0, 0, size.width, device == 0 ? PH_BAR_HEIGHT : 40);
-		[[[self delegate] _topBar] updateSize:frame];
+		[topBar updateSize:frame];
 	}
 }
 
@@ -224,7 +181,7 @@ static void releaseBlurBars2()
 - (void)updateSize:(CGRect)frame
 {
 	releaseBlurBars();
-	UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
+	UIView *backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
 	createBlurBarWithFrame(frame);
 	[backgroundView insertSubview:blurBar atIndex:0];
 }
@@ -280,12 +237,12 @@ static void releaseBlurBars2()
 	if ([[[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.PS.PhotoFlash.plist"] objectForKey:@"PFEnabled"] boolValue] &&
 		dlopen("/Library/MobileSubstrate/DynamicLibraries/PhotoFlash.dylib", RTLD_LAZY) != NULL)
 		pf = YES;
-	UIView* backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
-	if (!notUseBackdrop) {
+	UIView *backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
+	if (useBackdrop) {
 		createBackdropBar();
 		[backgroundView addSubview:backdropBar];
 	} else {
-		CGSize size = [self sizeThatFits:CGSizeZero];
+		CGSize size = isiOS8 ? [self intrinsicContentSize] : [self sizeThatFits:CGSizeZero];
 		CGRect frame = CGRectMake(0, 0, size.width, pf ? PH_BAR_HEIGHT : size.height);
 		createBlurBarWithFrame(frame);
 		[backgroundView addSubview:blurBar];
@@ -307,7 +264,7 @@ static void releaseBlurBars2()
 	%orig;
 	if (!blurBottom)
 		return;
-	if (!notUseBackdrop) {
+	if (useBackdrop) {
 		createBackdropBar2();
 		[self addSubview:backdropBar2];
     } else {
@@ -324,69 +281,39 @@ static void releaseBlurBars2()
 
 %end
 
-%hook CameraView
+%end
+
+%group preiOS8
+
+%hook PLCameraView
 
 - (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
 {
-	if (handleVideoTB) {
-		blurBar.hidden = YES;
-		backdropBar.hidden = YES;
-	}
-	if (handleVideoBB) {
-		blurBar2.hidden = YES;
-		backdropBar2.hidden = YES;
-	}
+	showBar(NO);
 	%orig;
 }
 
-- (void)cameraControllerDidStopVideoCapture:(id)cameraController
+- (void)_hideControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
 {
 	%orig;
-	if (handleVideoTB) {
-		blurBar.hidden = NO;
-		backdropBar.hidden = NO;
-	}
-	if (handleVideoBB) {
-		blurBar2.hidden = NO;
-		backdropBar2.hidden = NO;
-	}
+	showBar(YES);
 }
 
 - (void)cameraController:(id)controller didStartTransitionToShowEffectsGrid:(BOOL)showEffectsGrid animated:(BOOL)animated
 {
 	%orig;
-	if (handleEffectTB) {
-		blurBar.hidden = showEffectsGrid;
-		backdropBar.hidden = showEffectsGrid;
-	}
-	if (handleEffectBB) {
-		blurBar2.hidden = showEffectsGrid;
-		backdropBar2.hidden = showEffectsGrid;
-	}
+	showBar(!showEffectsGrid);
 }
 
-- (void)_performPanoramaCapture
+- (void)_showControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	if (handlePanoTB) {
-		blurBar.hidden = YES;
-		backdropBar.hidden = YES;
-	}
-	if (handlePanoBB) {
-		blurBar2.hidden = YES;
-		backdropBar2.hidden = YES;
-	}
+	showBar(NO);
 	%orig;
 }
 
-- (void)cameraControllerWillStopPanoramaCapture:(id)capture
+- (void)_hideControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	if (handlePanoTB) {
-		blurBar.hidden = NO;
-		backdropBar.hidden = NO;
-	}
-	if (handlePanoBB) {
-		backdropBar2.hidden = NO;
-	}
+	showBar(YES);
 	%orig;
 }
 
@@ -394,15 +321,100 @@ static void releaseBlurBars2()
 
 %end
 
-%ctor {
+%group iOS8
+
+%hook CAMCameraView
+
+- (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
+{
+	showBar(NO);
+	%orig;
+}
+
+- (void)_hideControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
+{
+	%orig;
+	showBar(YES);
+}
+
+- (void)cameraController:(id)controller didStartTransitionToShowEffectsGrid:(BOOL)showEffectsGrid animated:(BOOL)animated
+{
+	%orig;
+	showBar(!showEffectsGrid);
+}
+
+- (void)_showControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
+{
+	showBar(NO);
+	%orig;
+}
+
+- (void)_hideControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
+{
+	showBar(YES);
+	%orig;
+}
+
+- (void)_showControlsForCapturingTimelapseAnimated:(BOOL)capturingTimelapseAnimated
+{
+	showBar(NO);
+	%orig;
+}
+
+- (void)_hideControlsForCapturingTimelapseAnimated:(BOOL)capturingTimelapseAnimated
+{
+	showBar(YES);
+	%orig;
+}
+
+%end
+
+%end
+
+BOOL shouldInjectUIKit()
+{
+	BOOL inject = NO;
+	NSArray *args = [[NSClassFromString(@"NSProcessInfo") processInfo] arguments];
+	NSUInteger count = [args count];
+	if (count != 0) {
+		NSString *executablePath = [args objectAtIndex:0];
+		if (executablePath) {
+			NSString *processName = [executablePath lastPathComponent];
+			BOOL isApplication = [executablePath rangeOfString:@"/Application"].location != NSNotFound;
+			BOOL isSpringBoard = [processName isEqualToString:@"SpringBoard"];
+			BOOL isMail = [processName isEqualToString:@"MobileMail"];
+			BOOL isPref = [processName isEqualToString:@"Preferences"];
+			BOOL notOkay = isMail || isPref;
+			inject = (isApplication || isSpringBoard) && !notOkay;
+		}
+	}
+	return inject;
+}
+
+static void PostNotification(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
+{
+	system("killall Camera");
+	loadPrefs();
+}
+
+%ctor
+{
+	if (!shouldInjectUIKit())
+		return;
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PreferencesChangedCallback, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
-	CB7Loader();
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, PreferencesChangedNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
+	loadPrefs();
 	if (blur) {
 		dlopen("/System/Library/PrivateFrameworks/PhotoLibrary.framework/PhotoLibrary", RTLD_LAZY);
 		dlopen("/System/Library/PrivateFrameworks/CameraKit.framework/CameraKit", RTLD_LAZY);
-		%init(Common, CameraView = isiOS8 ? objc_getClass("CAMCameraView") : objc_getClass("PLCameraView"));
-		if (notUseBackdrop) {
+		if (isiOS8) {
+			%init(iOS8);
+		}
+		else if (isiOS7) {
+			%init(preiOS8);
+		}
+		%init(Common);
+		if (!useBackdrop) {
 			%init(CKCB7BlurView, CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController"));
 		}
 	}

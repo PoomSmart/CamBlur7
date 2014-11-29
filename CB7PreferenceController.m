@@ -5,18 +5,23 @@
 #import <Social/Social.h>
 #import "NKOColorPickerView.h"
 #import <dlfcn.h>
-#import <notify.h>
 #import "Common.h"
 #import "../PS.h"
 
 NSString *const updateCellColorNotification = @"com.PS.CamBlur7.prefs.colorUpdate";
 NSString *const IdentifierKey = @"CB7ColorCellIdentifier";
 
+@interface PSSwitchTableCell : PSControlTableCell
+- (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 specifier:(id)arg3;
+@end
+
 __attribute__((visibility("hidden")))
 @interface CB7PreferenceController : PSListController
 @end
 
 @interface CB7ColorPickerViewController : UIViewController
+@property (retain) UIColor *color;
+@property (retain) NSString *identifier;
 @end
 
 @interface CB7ColorCell : PSTableCell
@@ -37,7 +42,9 @@ static void writeIntegerValueForKey(int value, NSString *key)
 {
 	NSMutableDictionary *dict = [prefDict() mutableCopy] ?: [NSMutableDictionary dictionary];
 	[dict setObject:@(value) forKey:key];
-	[dict writeToFile:PREF_PATH atomically:YES];
+	BOOL write = [dict writeToFile:PREF_PATH atomically:NO];
+	if (write)
+		CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), PreferencesChangedNotification, NULL, NULL, YES);
 }
 
 static UIColor *savedCustomColor(NSString *identifier)
@@ -64,6 +71,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 		NSString *identifier = [specifier identifier];
 		[self updateColorCellForIdentifier:identifier];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateColorCell:) name:updateCellColorNotification object:nil];
+		[[NSUserDefaults standardUserDefaults] synchronize];
 	}
 	return self;
 }
@@ -97,6 +105,21 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 @end
 
+@interface PSXSwitchTableCell : PSSwitchTableCell
+@end
+ 
+@implementation PSXSwitchTableCell
+ 
+- (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 specifier:(id)arg3
+{
+	self = [super initWithStyle:arg1 reuseIdentifier:arg2 specifier:arg3];
+	if (self)
+		[((UISwitch *)[self control]) setOnTintColor:[UIColor systemBlueColor]];
+	return self;
+}
+ 
+@end
+
 @interface BlurQualityCell : PSTableCell
 @end
 
@@ -116,7 +139,6 @@ static UIColor *savedCustomColor(NSString *identifier)
 - (void)modeAction:(UISegmentedControl *)segment
 {
 	writeIntegerValueForKey(segment.selectedSegmentIndex, QualityKey);
-	notify_post(PreferencesChangedNotification);
 }
 
 - (SEL)action
@@ -148,21 +170,11 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 @implementation CB7ColorPickerViewController
 
-NKOColorPickerDidChangeColorBlock colorDidChangeBlock = ^(UIColor *color, NSString *identifier){
-    NSMutableDictionary *dict = [[NSMutableDictionary dictionaryWithContentsOfFile:PREF_PATH] mutableCopy] ?: [NSMutableDictionary dictionary];
-    CGFloat hue, sat, bri;
-    BOOL getColor = [color getHue:&hue saturation:&sat brightness:&bri alpha:nil];
-    if (getColor) {
-    	NSString *hueKey = [@"Hue" stringByAppendingString:identifier];
-		NSString *satKey = [@"Sat" stringByAppendingString:identifier];
-		NSString *briKey = [@"Bri" stringByAppendingString:identifier];
-		[dict setObject:@(hue) forKey:hueKey];
-		[dict setObject:@(sat) forKey:satKey];
-		[dict setObject:@(bri) forKey:briKey];
-		[dict writeToFile:PREF_PATH atomically:YES];
-		[[NSNotificationCenter defaultCenter] postNotificationName:updateCellColorNotification object:nil userInfo:@{IdentifierKey:identifier}];
-	}
-};
+- (void)colorDidChange:(UIColor *)color identifier:(NSString *)identifier
+{
+	self.color = color;
+	self.identifier = identifier;
+}
 
 - (UIColor *)savedCustomColor:(NSString *)identifier
 {
@@ -172,7 +184,7 @@ NKOColorPickerDidChangeColorBlock colorDidChangeBlock = ^(UIColor *color, NSStri
 - (id)initWithIdentifier:(NSString *)identifier
 {
 	if (self == [super init]) {
-		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0, 0, 300, 340) color:[[self savedCustomColor:identifier] retain] identifier:identifier andDidChangeColorBlock:colorDidChangeBlock] autorelease];
+		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0, 0, 300, 340) color:[[self savedCustomColor:identifier] retain] identifier:identifier delegate:self] autorelease];
 		colorPickerView.backgroundColor = [UIColor blackColor];
 		self.view = colorPickerView;
 		self.navigationItem.title = @"Select Color";
@@ -183,6 +195,23 @@ NKOColorPickerDidChangeColorBlock colorDidChangeBlock = ^(UIColor *color, NSStri
 
 - (void)dismissPicker
 {
+	NSMutableDictionary *dict = [[NSMutableDictionary dictionaryWithContentsOfFile:PREF_PATH] mutableCopy] ?: [NSMutableDictionary dictionary];
+    CGFloat hue, sat, bri;
+    NSString *identifier = self.identifier;
+    BOOL getColor = [self.color getHue:&hue saturation:&sat brightness:&bri alpha:nil];
+    if (getColor) {
+    	NSString *hueKey = [@"Hue" stringByAppendingString:identifier];
+		NSString *satKey = [@"Sat" stringByAppendingString:identifier];
+		NSString *briKey = [@"Bri" stringByAppendingString:identifier];
+		[dict setObject:@(hue) forKey:hueKey];
+		[dict setObject:@(sat) forKey:satKey];
+		[dict setObject:@(bri) forKey:briKey];
+		BOOL write = [dict writeToFile:PREF_PATH atomically:NO];
+		if (write) {
+			CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), PreferencesChangedNotification, NULL, NULL, YES);
+			[[NSNotificationCenter defaultCenter] postNotificationName:updateCellColorNotification object:nil userInfo:@{IdentifierKey:identifier}];
+		}
+	}
 	[[self parentViewController] dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -208,6 +237,7 @@ NKOColorPickerDidChangeColorBlock colorDidChangeBlock = ^(UIColor *color, NSStri
 	[twitter setInitialText:@"#CamBlur7 by @PoomSmart is awesome!"];
 	if (twitter != nil)
 		[[self navigationController] presentViewController:twitter animated:YES completion:nil];
+	[twitter release];
 }
 
 - (void)showColorPicker:(id)param
@@ -227,6 +257,24 @@ NKOColorPickerDidChangeColorBlock colorDidChangeBlock = ^(UIColor *color, NSStri
 - (void)twitter:(id)param
 {
 	[[UIApplication sharedApplication] openURL:[NSURL URLWithString:PS_TWITTER_URL]];
+}
+
+- (id)readPreferenceValue:(PSSpecifier *)specifier
+{
+	NSDictionary *settings = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
+	if (!settings[specifier.properties[@"key"]])
+		return specifier.properties[@"default"];
+	return settings[specifier.properties[@"key"]];
+}
+ 
+- (void)setPreferenceValue:(id)value specifier:(PSSpecifier *)specifier
+{
+	NSMutableDictionary *defaults = [NSMutableDictionary dictionary];
+	[defaults addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:PREF_PATH]];
+	[defaults setObject:value forKey:specifier.properties[@"key"]];
+	[defaults writeToFile:PREF_PATH atomically:YES];
+	CFStringRef post = (CFStringRef)specifier.properties[@"PostNotification"];
+	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), post, NULL, NULL, YES);
 }
 
 - (NSArray *)specifiers
