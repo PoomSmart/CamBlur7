@@ -9,7 +9,6 @@ static CKCB7BlurView *blurBar2 = nil;
 static _UIBackdropView *backdropBar = nil;
 static _UIBackdropView *backdropBar2 = nil;
 
-static BOOL pf = NO;
 static BOOL useBackdrop;
 
 static BOOL blur;
@@ -30,7 +29,7 @@ static void loadPrefs()
 	#define BoolOpt(option) \
 		option = dict[[NSString stringWithUTF8String:#option]] ? [dict[[NSString stringWithUTF8String:#option]] boolValue] : YES;
 	#define FloatOpt(option) \
-		option = dict[[NSString stringWithUTF8String:#option]] ? [dict[[NSString stringWithUTF8String:#option]] floatValue] : 0.35;
+		option = dict[[NSString stringWithUTF8String:#option]] ? [dict[[NSString stringWithUTF8String:#option]] floatValue] : 0.35f;
 	BoolOpt(blur)
 	BoolOpt(blurTop)
 	BoolOpt(blurBottom)
@@ -81,22 +80,36 @@ static _UIBackdropViewSettings *backdropBlurSettings()
 	return settings;
 }
 
+static void layoutBlurBar(CGRect frame)
+{
+	if (blurTop) {
+		blurBar.frame = frame;
+		blurBar.blurCroppingRect = frame;
+	}
+}
+
 static void createBlurBarWithFrame(CGRect frame)
 {
 	blurBar = [[CKCB7BlurView alloc] initWithFrame:frame];
 	blurBar.blurRadius = blurAmount;
-	blurBar.frame = frame;
-	blurBar.blurCroppingRect = frame;
+	layoutBlurBar(frame);
 	[blurBar setBlurQuality:quality];
 	setBlurBarColor(blurBar, YES);
+}
+
+static void layoutBlurBar2(CGRect frame)
+{
+	if (blurBottom) {
+		blurBar2.frame = frame;
+		blurBar2.blurCroppingRect = frame;
+	}
 }
 
 static void createBlurBar2WithFrame(CGRect frame)
 {
 	blurBar2 = [[CKCB7BlurView alloc] initWithFrame:frame];
 	blurBar2.blurRadius = blurAmount;
-	blurBar2.frame = frame;
-	blurBar2.blurCroppingRect = frame;
+	layoutBlurBar2(frame);
 	[blurBar2 setBlurQuality:quality];
 	setBlurBarColor(blurBar2, NO);
 }
@@ -160,30 +173,13 @@ static void showBar(BOOL show)
 
 %group CKCB7BlurView
 
-%hook CameraController
-
-- (void)_setCameraMode:(int)mode cameraDevice:(int)device
-{
-	%orig;
-	if (pf) {
-		CAMTopBar *topBar = [[self delegate] _topBar];
-		CGSize size = blurBar.frame.size;
-		CGRect frame = CGRectMake(0, 0, size.width, device == 0 ? PH_BAR_HEIGHT : 40);
-		[topBar updateSize:frame];
-	}
-}
-
-%end
-
 %hook CAMTopBar
 
-%new
-- (void)updateSize:(CGRect)frame
+- (void)layoutSubviews
 {
-	releaseBlurBars();
-	UIView *backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
-	createBlurBarWithFrame(frame);
-	[backgroundView insertSubview:blurBar atIndex:0];
+	%orig;
+	CGRect frame = [self alignmentRectForFrame:self.bounds];
+	layoutBlurBar(frame);
 }
 
 %end
@@ -196,13 +192,7 @@ static void showBar(BOOL show)
 	Class CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController");
 	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[CameraController sharedInstance] isCapturingVideo] && handleVideoBB))
 		return;
-	if (blurBar2 != nil && blurBottom) {
-		releaseBlurBars2();
-		CGSize size = self.frame.size;
-		CGRect frame = CGRectMake(0, 0, size.width, size.height);
-		createBlurBar2WithFrame(frame);
-		[self insertSubview:blurBar2 atIndex:0];
-    }
+	layoutBlurBar2(self.bounds);
 }
 
 - (void)_layoutForHorizontalOrientation
@@ -211,13 +201,8 @@ static void showBar(BOOL show)
 	Class CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController");
 	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[CameraController sharedInstance] isCapturingVideo] && handleVideoBB))
 		return;
-	if (blurBar2 != nil && blurBottom) {
-		releaseBlurBars2();
-		CGSize size = self.frame.size;
-		CGRect frame = CGRectMake(0, 0, size.width, size.height);
-		createBlurBar2WithFrame(frame);
-		[self insertSubview:blurBar2 atIndex:0];
-    }
+	UIView *backgroundView = isiOS8Up ? MSHookIvar<UIView *>(self, "_backgroundView") : self;
+	layoutBlurBar2(backgroundView.bounds);
 }
 
 %end
@@ -233,18 +218,12 @@ static void showBar(BOOL show)
 	%orig;
 	if (!blurTop)
 		return;
-	pf = NO;
-	if ([[[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.PS.PhotoFlash.plist"] objectForKey:@"PFEnabled"] boolValue] &&
-		dlopen("/Library/MobileSubstrate/DynamicLibraries/PhotoFlash.dylib", RTLD_LAZY) != NULL)
-		pf = YES;
 	UIView *backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
 	if (useBackdrop) {
 		createBackdropBar();
 		[backgroundView addSubview:backdropBar];
 	} else {
-		CGSize size = isiOS8 ? [self intrinsicContentSize] : [self sizeThatFits:CGSizeZero];
-		CGRect frame = CGRectMake(0, 0, size.width, pf ? PH_BAR_HEIGHT : size.height);
-		createBlurBarWithFrame(frame);
+		createBlurBarWithFrame(CGRectZero);
 		[backgroundView addSubview:blurBar];
 	}
 }
@@ -264,12 +243,13 @@ static void showBar(BOOL show)
 	%orig;
 	if (!blurBottom)
 		return;
+	UIView *backgroundView = isiOS8Up ? MSHookIvar<UIView *>(self, "_backgroundView") : self;
 	if (useBackdrop) {
 		createBackdropBar2();
-		[self addSubview:backdropBar2];
+		[backgroundView addSubview:backdropBar2];
     } else {
     	createBlurBar2WithFrame(CGRectZero);
-		[self addSubview:blurBar2];
+		[backgroundView addSubview:blurBar2];
     }
 }
 
@@ -322,6 +302,41 @@ static void showBar(BOOL show)
 %end
 
 %group iOS8
+
+%hook CAMBottomBar
+
+- (void)_setupHorizontalShutterButtonConstraints
+{
+	%orig;
+	if (self.modeDial == nil) {
+		NSArray *constraints = [self cam_constraintsForKey:@"CAMShutterButton"];
+		[self cam_removeAllConstraintsForKey:@"CAMShutterButton"];
+		NSMutableArray *newConstraints = [NSMutableArray array];
+		[newConstraints addObjectsFromArray:constraints];
+		CAMShutterButton *shutterButton = [self.shutterButton retain];
+		UIView *spacer = [[self _shutterButtomBottomLayoutSpacer] retain];
+		NSMutableArray *deleteConstraints = [NSMutableArray array];
+		for (NSLayoutConstraint *layout in newConstraints) {
+			if (layout.firstItem == shutterButton && layout.firstAttribute == NSLayoutAttributeBottom)
+				[deleteConstraints addObject:layout];
+		}
+		if (deleteConstraints.count > 0) {
+			for (NSLayoutConstraint *layout in deleteConstraints) {
+				[newConstraints removeObject:layout];
+			}
+		}
+		[self retain];
+		NSLayoutConstraint *centerY = [[NSLayoutConstraint constraintWithItem:shutterButton attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeBottom multiplier:1.0f constant:-4.5f] retain];
+		[newConstraints addObject:centerY];
+		[self cam_addConstraints:newConstraints forKey:@"CAMShutterButton"];
+		[self release];
+		[centerY release];
+		[spacer release];
+		[shutterButton release];
+	}
+}
+
+%end
 
 %hook CAMCameraView
 
@@ -415,7 +430,7 @@ static void PostNotification(CFNotificationCenterRef center, void *observer, CFS
 		}
 		%init(Common);
 		if (!useBackdrop) {
-			%init(CKCB7BlurView, CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController"));
+			%init(CKCB7BlurView);
 		}
 	}
 	[pool drain];

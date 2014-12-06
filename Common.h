@@ -5,9 +5,16 @@ CFStringRef const PreferencesChangedNotification = CFSTR("com.PS.CamBlur7.prefs"
 NSString *const PREF_PATH = @"/var/mobile/Library/Preferences/com.PS.CamBlur7.plist";
 NSString *const QualityKey = @"Quality";
 
+@interface CAMModeDial : UIView
+@end
+
+@interface CAMShutterButton : UIButton
+@end
+
 @interface CAMTopBar : UIView
 - (CGSize)sizeThatFits:(CGSize)fits;
 - (CGSize)intrinsicContentSize;
+- (CGRect)alignmentRectForFrame:(CGRect)frame;
 @end
 
 @interface CAMTopBar (CamBlur7)
@@ -15,7 +22,10 @@ NSString *const QualityKey = @"Quality";
 @end
 
 @interface CAMBottomBar : UIView
+@property(retain, nonatomic) CAMShutterButton *shutterButton;
+@property(retain, nonatomic) CAMModeDial *modeDial;
 - (CGSize)sizeThatFits:(CGSize)fits;
+- (UIView *)_shutterButtomBottomLayoutSpacer;
 @end
 
 @interface PLCameraView : UIView
@@ -46,4 +56,10 @@ NSString *const QualityKey = @"Quality";
 + (CAMCaptureController *)sharedInstance;
 - (CAMCameraView *)delegate;
 - (BOOL)isCapturingVideo;
+@end
+
+@interface UIView (Constraints)
+- (NSArray *)cam_constraintsForKey:(NSString *)key;
+- (void)cam_addConstraints:(NSArray *)constraints forKey:(NSString *)key;
+- (void)cam_removeAllConstraintsForKey:(NSString *)key;
 @end
