@@ -1,3 +1,5 @@
+#import <substrate.h>
+#import <objc/runtime.h>
 #import "Backdrop.h"
 #import "CKCB7BlurView.h"
 #import "Common.h"
@@ -14,6 +16,7 @@ static BOOL useBackdrop;
 static BOOL blur;
 static BOOL blurTop;
 static BOOL blurBottom;
+static BOOL readable;
 static BOOL handleEffectTB, handlePanoTB, handleVideoTB;
 static BOOL handleEffectBB, handlePanoBB, handleVideoBB;
 
@@ -21,7 +24,7 @@ static CGFloat blurAmount;
 static CGFloat HuetopBar, SattopBar, BritopBar;
 static CGFloat HuebottomBar, SatbottomBar, BribottomBar;
 
-static NSString *quality = CKBlurViewQualityDefault;
+static NSString *quality;
 
 static void loadPrefs()
 {
@@ -34,6 +37,7 @@ static void loadPrefs()
 	BoolOpt(blurTop)
 	BoolOpt(blurBottom)
 	useBackdrop = dict[@"useBackdrop"] ? [dict[@"useBackdrop"] boolValue] : NO;
+	readable = dict[@"readable"] ? [dict[@"readable"] boolValue] : NO;
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
 	BoolOpt(handleVideoTB)
@@ -46,7 +50,7 @@ static void loadPrefs()
 	FloatOpt(HuebottomBar)
 	FloatOpt(SatbottomBar)
 	FloatOpt(BribottomBar)
-	int value = dict[QualityKey] != nil ? [dict[QualityKey] intValue] : 0;
+	int value = dict[QualityKey] ? [dict[QualityKey] intValue] : 0;
 	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
 	blurAmount = dict[@"blurAmount"] ? [dict[@"blurAmount"] floatValue] : 20.0f;
 }
@@ -158,16 +162,168 @@ static void releaseBlurBars2()
 	}
 }
 
-static void showBar(BOOL show)
+static void showTopBar(BOOL show)
 {
 	BOOL hide = !show;
-	if (handleVideoTB) {
-		blurBar.hidden = hide;
-		backdropBar.hidden = hide;
+	blurBar.hidden = hide;
+	backdropBar.hidden = hide;
+}
+
+static void showBottomBar(BOOL show)
+{
+	BOOL hide = !show;
+	blurBar2.hidden = hide;
+	backdropBar2.hidden = hide;
+}
+
+static void showBar(BOOL show)
+{
+	if (handleVideoTB)
+		showTopBar(show);
+	if (handleVideoBB)
+		showBottomBar(show);
+}
+
+static _UILegibilityView *_imageLegibilityView;
+
+static void configureShadowLegibility(UIView *view)
+{
+	if (!readable) return;
+	if (view) {
+		view.layer.shadowColor = [[UIColor blackColor] CGColor];
+		view.layer.shadowRadius = 3.0f;
+		view.layer.shadowOpacity = 1.0f;
+		view.layer.shadowOffset = CGSizeZero;
+		view.layer.masksToBounds = NO;
 	}
-	if (handleVideoBB) {
-		blurBar2.hidden = hide;
-		backdropBar2.hidden = hide;
+}
+
+static void configureImageLegibility(UIImageView *imageView)
+{
+	if (!readable) return;
+	if (imageView) {
+		if (!CGRectEqualToRect(CGRectZero, imageView.frame)) {
+			UIView *imageLegibilityView = objc_getAssociatedObject(imageView, &_imageLegibilityView);
+			if (imageLegibilityView != nil) {
+				[imageLegibilityView removeFromSuperview];
+				[imageLegibilityView release];
+				imageLegibilityView = nil;
+				objc_setAssociatedObject(imageView, &_imageLegibilityView, imageLegibilityView, OBJC_ASSOCIATION_ASSIGN);
+			}
+			_UILegibilitySettingsProvider *provider = [[_UILegibilitySettingsProvider alloc] init];
+			[provider pl_primeForUseWithCameraOverlays];
+			_UILegibilitySettings *settings = [[provider settings] retain];
+			UIImage *image = [imageView.image retain];
+			imageLegibilityView = [[_UILegibilityView alloc] initWithSettings:settings strength:2.5 image:image shadowImage:nil options:_UILegibilityViewOptionUsesColorFilters];
+			[image release];
+			[settings release];
+			[provider release];
+			imageLegibilityView.frame = imageView.bounds;
+			[imageView addSubview:imageLegibilityView];
+			objc_setAssociatedObject(imageView, &_imageLegibilityView, imageLegibilityView, OBJC_ASSOCIATION_ASSIGN);
+		}
+	}
+}
+
+static void configureLabelLegibilityOfHDRButton(UIView <cameraViewDelegate> *self)
+{
+	if (!readable) return;
+	CAMHDRButton *hdrButton = MSHookIvar<CAMHDRButton *>(self, "__HDRButton");
+	if (hdrButton) {
+		if ([hdrButton isKindOfClass:objc_getClass("CAMTriStateButton")]) {
+			CAMButtonLabel *autoLabel = MSHookIvar<CAMButtonLabel *>(hdrButton, "__autoLabel");
+			CAMButtonLabel *landscapeLabel = MSHookIvar<CAMButtonLabel *>(hdrButton, "__landscapeFeatureLabel");
+			CAMButtonLabel *offLabel = MSHookIvar<CAMButtonLabel *>(hdrButton, "__offLabel");
+			CAMButtonLabel *onLabel = MSHookIvar<CAMButtonLabel *>(hdrButton, "__onLabel");
+			configureShadowLegibility(autoLabel);
+			configureShadowLegibility(landscapeLabel);
+			configureShadowLegibility(offLabel);
+			configureShadowLegibility(onLabel);
+			/*[autoLabel setUseLegibilityView:YES];
+			[landscapeLabel setUseLegibilityView:YES];
+			[offLabel setUseLegibilityView:YES];
+			[onLabel setUseLegibilityView:YES];*/
+		} else {
+			for (CAMButtonLabel *label in hdrButton.subviews) {
+				if ([label isKindOfClass:objc_getClass("CAMButtonLabel")])
+					[label setUseLegibilityView:YES];
+			}
+		}
+	}
+}
+
+static void configureLegibilityOfTimerButton(UIView <cameraViewDelegate> *self)
+{
+	if (!readable) return;
+	CAMTimerButton *timerButton = MSHookIvar<CAMTimerButton *>(self, "__timerButton");
+	if (timerButton) {
+		configureImageLegibility(MSHookIvar<UIImageView *>(timerButton, "__glyphView"));
+		for (CAMButtonLabel *label in timerButton.subviews) {
+			if ([label isKindOfClass:objc_getClass("CAMButtonLabel")])
+				[label setUseLegibilityView:YES];
+		}
+	}
+}
+
+static void configureLegibilityOfFlipButton(UIView <cameraViewDelegate> *self)
+{
+	if (!readable) return;
+	CAMFlipButton *flipButton = MSHookIvar<CAMFlipButton *>(self, "__flipButton");
+	if (flipButton) {
+		//configureImageLegibility(MSHookIvar<UIImageView *>(flipButton, "_imageView"));
+		configureShadowLegibility(flipButton);
+	}
+}
+
+static void configureLegibilityOfFilterButton(UIView <cameraViewDelegate> *self)
+{
+	if (!readable) return;
+	CAMFilterButton *filterButton = MSHookIvar<CAMFilterButton *>(self, "__filterButton");
+	if (filterButton) {
+		//configureImageLegibility(MSHookIvar<UIImageView *>(filterButton, "_imageView"));
+		configureShadowLegibility(filterButton);
+	}
+}
+
+static void configureLegibilityOfShutterButton(UIView <cameraViewDelegate> *self)
+{
+	if (!readable) return;
+	CAMShutterButton *shutterButton = MSHookIvar<CAMShutterButton *>(self, "__shutterButton");
+	if (shutterButton) {
+		//configureImageLegibility(MSHookIvar<UIImageView *>(shutterButton, "_imageView"));
+		configureShadowLegibility(shutterButton);
+	}
+}
+
+static void configureLegibilityOfFlashButton(UIView <cameraViewDelegate> *self)
+{
+	if (!readable) return;
+	CAMFlashButton *flashButton = MSHookIvar<CAMFlashButton *>(self, "__flashButton");
+	if (flashButton) {
+		UIImageView *imageView = nil;
+		if ([flashButton respondsToSelector:@selector(_flashIconView)])
+			imageView = flashButton._flashIconView;
+		else if ([flashButton respondsToSelector:@selector(_iconView)])
+			imageView = flashButton._iconView;
+		else
+			imageView = MSHookIvar<UIImageView *>(flashButton, "__glyphView");
+		if ([flashButton isKindOfClass:objc_getClass("CAMTriStateButton")]) {
+			CAMButtonLabel *autoLabel = MSHookIvar<CAMButtonLabel *>(flashButton, "__autoLabel");
+			CAMButtonLabel *landscapeLabel = MSHookIvar<CAMButtonLabel *>(flashButton, "__landscapeFeatureLabel");
+			CAMButtonLabel *offLabel = MSHookIvar<CAMButtonLabel *>(flashButton, "__offLabel");
+			CAMButtonLabel *onLabel = MSHookIvar<CAMButtonLabel *>(flashButton, "__onLabel");
+			configureShadowLegibility(autoLabel);
+			configureShadowLegibility(landscapeLabel);
+			configureShadowLegibility(offLabel);
+			configureShadowLegibility(onLabel);
+			configureShadowLegibility(imageView);
+		} else {
+			configureImageLegibility(imageView);
+			for (CAMButtonLabel *label in flashButton.subviews) {
+				if ([label isKindOfClass:objc_getClass("CAMButtonLabel")])
+					[label setUseLegibilityView:YES];
+			}
+		}
 	}
 }
 
@@ -211,20 +367,61 @@ static void showBar(BOOL show)
 
 %group Common
 
+static void CAMModeDialConfigure(CAMModeDial *self)
+{
+	if (!readable) return;
+	NSArray *items = [self _items];
+	for (CAMModeDialItem *item in items) {
+		if ([item isKindOfClass:objc_getClass("CAMModeDialItem")]) {
+			for (UILabel *label in item.subviews) {
+				if ([label isKindOfClass:[UILabel class]]) {
+					configureShadowLegibility(label);
+				}
+			}
+		}
+	}
+}
+
+%hook CAMModeDial
+
+- (void)setSelectedIndex:(unsigned)index animated:(BOOL)animated
+{
+	%orig;
+	CAMModeDialConfigure(self);
+}
+
+- (void)reloadData
+{
+	%orig;
+	CAMModeDialConfigure(self);
+}
+
+%end
+
+%hook CAMElapsedTimeView
+
+- (void)_commonCAMElapsedTimeViewInitialization
+{
+	%orig;
+	configureShadowLegibility(MSHookIvar<UILabel *>(self, "__timeLabel"));
+}
+
+%end
+
 %hook CAMTopBar
 
 - (void)_commonCAMTopBarInitialization
 {
 	%orig;
-	if (!blurTop)
-		return;
-	UIView *backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
-	if (useBackdrop) {
-		createBackdropBar();
-		[backgroundView addSubview:backdropBar];
-	} else {
-		createBlurBarWithFrame(CGRectZero);
-		[backgroundView addSubview:blurBar];
+	if (blurTop) {
+		UIView *backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
+		if (useBackdrop) {
+			createBackdropBar();
+			[backgroundView addSubview:backdropBar];
+		} else {
+			createBlurBarWithFrame(CGRectZero);
+			[backgroundView addSubview:blurBar];
+		}
 	}
 }
 
@@ -241,15 +438,15 @@ static void showBar(BOOL show)
 - (void)_commonCAMBottomBarInitialization
 {
 	%orig;
-	if (!blurBottom)
-		return;
-	UIView *backgroundView = isiOS8Up ? MSHookIvar<UIView *>(self, "_backgroundView") : self;
-	if (useBackdrop) {
-		createBackdropBar2();
-		[backgroundView addSubview:backdropBar2];
-    } else {
-    	createBlurBar2WithFrame(CGRectZero);
-		[backgroundView addSubview:blurBar2];
+	if (blurBottom) {
+		UIView *backgroundView = isiOS8Up ? MSHookIvar<UIView *>(self, "_backgroundView") : self;
+		if (useBackdrop) {
+			createBackdropBar2();
+			[backgroundView addSubview:backdropBar2];
+    	} else {
+    		createBlurBar2WithFrame(CGRectZero);
+			[backgroundView addSubview:blurBar2];
+    	}
     }
 }
 
@@ -266,6 +463,48 @@ static void showBar(BOOL show)
 %group preiOS8
 
 %hook PLCameraView
+
+- (BOOL)_shouldHideFlipButtonForMode:(int)mode
+{
+	BOOL orig = %orig;
+	if (!orig)
+		configureLegibilityOfFlipButton(self);
+	return orig;
+}
+
+- (void)_createHDRButtonIfNecessary
+{
+	%orig;
+	configureLabelLegibilityOfHDRButton(self);
+}
+
+- (void)_createFlashButtonIfNecessary
+{
+	%orig;
+	configureLegibilityOfFlashButton(self);
+}
+
+- (void)_createFilterButtonIfNecessary
+{
+	%orig;
+	configureLegibilityOfFilterButton(self);
+}
+
+- (void)_createShutterButtonIfNecessary
+{
+	%orig;
+	configureLegibilityOfShutterButton(self);
+}
+
+- (void)_hideControlsForChangeToMode:(int)mode animated:(BOOL)animated
+{
+	%orig;
+	CAMTopBar *topBar = self._topBar;
+	if (topBar) {
+		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
+		showTopBar(topBarStyle != 1);
+	}
+}
 
 - (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
 {
@@ -287,13 +526,23 @@ static void showBar(BOOL show)
 
 - (void)_showControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	showBar(NO);
+	CAMTopBar *topBar = self._topBar;
+	if (topBar) {
+		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
+		if (topBarStyle != 1)
+			showBar(NO);
+	}
 	%orig;
 }
 
 - (void)_hideControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	showBar(YES);
+	CAMTopBar *topBar = self._topBar;
+	if (topBar) {
+		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
+		if (topBarStyle != 1)
+			showBar(YES);
+	}
 	%orig;
 }
 
@@ -340,6 +589,54 @@ static void showBar(BOOL show)
 
 %hook CAMCameraView
 
+- (BOOL)_shouldHideFlipButtonForMode:(int)mode
+{
+	BOOL orig = %orig;
+	if (!orig)
+		configureLegibilityOfFlipButton(self);
+	return orig;
+}
+
+- (void)_createHDRButtonIfNecessary
+{
+	%orig;
+	configureLabelLegibilityOfHDRButton(self);
+}
+
+- (void)_createFlashButtonIfNecessary
+{
+	%orig;
+	configureLegibilityOfFlashButton(self);
+}
+
+- (void)_createTimerButtonIfNecessary
+{
+	%orig;
+	configureLegibilityOfTimerButton(self);
+}
+
+- (void)_createFilterButtonIfNecessary
+{
+	%orig;
+	configureLegibilityOfFilterButton(self);
+}
+
+- (void)_createShutterButtonIfNecessary
+{
+	%orig;
+	configureLegibilityOfShutterButton(self);
+}
+
+- (void)_hideControlsForChangeToMode:(int)mode animated:(BOOL)animated
+{
+	%orig;
+	CAMTopBar *topBar = self._topBar;
+	if (topBar) {
+		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
+		showTopBar(topBarStyle != 1);
+	}
+}
+
 - (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
 {
 	showBar(NO);
@@ -360,13 +657,23 @@ static void showBar(BOOL show)
 
 - (void)_showControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	showBar(NO);
+	CAMTopBar *topBar = self._topBar;
+	if (topBar) {
+		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
+		if (topBarStyle != 1)
+			showBar(NO);
+	}
 	%orig;
 }
 
 - (void)_hideControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	showBar(YES);
+	CAMTopBar *topBar = self._topBar;
+	if (topBar) {
+		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
+		if (topBarStyle != 1)
+			showBar(YES);
+	}
 	%orig;
 }
 
