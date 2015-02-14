@@ -33,14 +33,14 @@ NSString *const QualityKey = @"Quality";
 @interface CAMTimerButton : UIButton
 @end
 
+@interface CAMShutterButton : UIButton
+@end
+
 @interface CAMFlipButton : UIButton
 - (UIImage *)_flipImage;
 @end
 
 @interface CAMElapsedTimeView : UIView
-@end
-
-@interface CAMShutterButton : UIButton
 @end
 
 @interface CAMTopBar : UIView
@@ -99,18 +99,15 @@ NSString *const QualityKey = @"Quality";
 + (UIImage *)_imageFromLabel:(UILabel *)label sizeToFit:(BOOL)fit;
 @end
 
+@interface _UILegibilitySettings : NSObject
+@end
+
 @interface _UILegibilitySettingsProvider : NSObject
 - (_UILegibilitySettings *)settings;
 @end
 
 @interface _UILegibilitySettingsProvider (PhotoLibraryAdditions)
 - (void)pl_primeForUseWithCameraOverlays;
-@end
-
-@interface UIView (Constraints)
-- (NSArray *)cam_constraintsForKey:(NSString *)key;
-- (void)cam_addConstraints:(NSArray *)constraints forKey:(NSString *)key;
-- (void)cam_removeAllConstraintsForKey:(NSString *)key;
 @end
 
 extern NSInteger _UILegibilityViewOptionUsesColorFilters;

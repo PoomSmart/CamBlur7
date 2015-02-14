@@ -552,41 +552,6 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 
 %group iOS8
 
-%hook CAMBottomBar
-
-- (void)_setupHorizontalShutterButtonConstraints
-{
-	%orig;
-	if (self.modeDial == nil) {
-		NSArray *constraints = [self cam_constraintsForKey:@"CAMShutterButton"];
-		[self cam_removeAllConstraintsForKey:@"CAMShutterButton"];
-		NSMutableArray *newConstraints = [NSMutableArray array];
-		[newConstraints addObjectsFromArray:constraints];
-		CAMShutterButton *shutterButton = [self.shutterButton retain];
-		UIView *spacer = [[self _shutterButtomBottomLayoutSpacer] retain];
-		NSMutableArray *deleteConstraints = [NSMutableArray array];
-		for (NSLayoutConstraint *layout in newConstraints) {
-			if (layout.firstItem == shutterButton && layout.firstAttribute == NSLayoutAttributeBottom)
-				[deleteConstraints addObject:layout];
-		}
-		if (deleteConstraints.count > 0) {
-			for (NSLayoutConstraint *layout in deleteConstraints) {
-				[newConstraints removeObject:layout];
-			}
-		}
-		[self retain];
-		NSLayoutConstraint *centerY = [[NSLayoutConstraint constraintWithItem:shutterButton attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeBottom multiplier:1.0f constant:-4.5f] retain];
-		[newConstraints addObject:centerY];
-		[self cam_addConstraints:newConstraints forKey:@"CAMShutterButton"];
-		[self release];
-		[centerY release];
-		[spacer release];
-		[shutterButton release];
-	}
-}
-
-%end
-
 %hook CAMCameraView
 
 - (BOOL)_shouldHideFlipButtonForMode:(int)mode
