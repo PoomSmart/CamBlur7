@@ -6,6 +6,14 @@
 #import "../PS.h"
 #import <CoreGraphics/CoreGraphics.h>
 
+@interface PLCameraView (CB7)
+- (BOOL)cb7_shouldHideBlurryTopBarForMode:(NSInteger)mode;
+@end
+
+@interface CAMCameraView (CB7)
+- (BOOL)cb7_shouldHideBlurryTopBarForMode:(NSInteger)mode;
+@end
+
 static CKCB7BlurView *blurBar = nil;
 static CKCB7BlurView *blurBar2 = nil;
 static _UIBackdropView *backdropBar = nil;
@@ -63,24 +71,24 @@ static void setBlurBarColor(id bar, BOOL top)
 	else
 		blurTint = [UIColor colorWithHue:HuebottomBar saturation:SatbottomBar brightness:BribottomBar alpha:1];
 	if ([NSStringFromClass([bar class]) isEqualToString:@"_UIBackdropView"]) {
-		[((_UIBackdropView *)bar).inputSettings setColorTint:blurTint];
-		[((_UIBackdropView *)bar).outputSettings setColorTint:blurTint];
+		((_UIBackdropView *)bar).inputSettings.colorTint = blurTint;
+		((_UIBackdropView *)bar).outputSettings.colorTint = blurTint;
 	} else {
 		const CGFloat *rgb = CGColorGetComponents(blurTint.CGColor);
     	CAFilter *tintFilter = [CAFilter filterWithName:@"colorAdd"];
 		[tintFilter setValue:@[@(rgb[0]), @(rgb[1]), @(rgb[2]), @(CGColorGetAlpha(blurTint.CGColor))] forKey:@"inputColor"];
-		[(CKCB7BlurView *)bar setTintColorFilter:tintFilter];
+		((CKCB7BlurView *)bar).tintColorFilter = tintFilter;
 	}
 }
 
 static _UIBackdropViewSettings *backdropBlurSettings()
 {
 	_UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:0];
-	[settings setUsesColorTintView:YES];
-	[settings setColorTintAlpha:0.5f];
-	[settings setRequiresColorStatistics:YES];
-	[settings setBlurRadius:blurAmount];
-	[settings setBlurQuality:quality];
+	settings.usesColorTintView = YES;
+	settings.colorTintAlpha = 0.5f;
+	settings.requiresColorStatistics = YES;
+	settings.blurRadius = blurAmount;
+	settings.blurQuality = quality;
 	return settings;
 }
 
@@ -92,13 +100,20 @@ static void layoutBlurBar(CGRect frame)
 	}
 }
 
-static void createBlurBarWithFrame(CGRect frame)
+static void createBlurBar(CAMTopBar *topBar)
 {
-	blurBar = [[CKCB7BlurView alloc] initWithFrame:frame];
+	UIView *backgroundView;
+	object_getInstanceVariable(topBar, "__backgroundView", (void **)&backgroundView);
+	blurBar = [[CKCB7BlurView alloc] initWithFrame:CGRectZero];
 	blurBar.blurRadius = blurAmount;
-	layoutBlurBar(frame);
-	[blurBar setBlurQuality:quality];
+	layoutBlurBar(CGRectZero);
+	blurBar.blurQuality = quality;
 	setBlurBarColor(blurBar, YES);
+	if (backgroundView != nil)
+		[backgroundView addSubview:blurBar];
+	else
+		[topBar addSubview:blurBar];
+	[topBar layoutSubviews];
 }
 
 static void layoutBlurBar2(CGRect frame)
@@ -109,29 +124,68 @@ static void layoutBlurBar2(CGRect frame)
 	}
 }
 
-static void createBlurBar2WithFrame(CGRect frame)
+static void createBlurBar2(CAMBottomBar *bottomBar)
 {
-	blurBar2 = [[CKCB7BlurView alloc] initWithFrame:frame];
+	UIView *backgroundView;
+	object_getInstanceVariable(bottomBar, "_backgroundView", (void **)&backgroundView);
+	blurBar2 = [[CKCB7BlurView alloc] initWithFrame:CGRectZero];
 	blurBar2.blurRadius = blurAmount;
-	layoutBlurBar2(frame);
-	[blurBar2 setBlurQuality:quality];
+	layoutBlurBar2(CGRectZero);
+	blurBar2.blurQuality = quality;
 	setBlurBarColor(blurBar2, NO);
+	if (backgroundView != nil)
+		[backgroundView addSubview:blurBar2];
+	else
+		[bottomBar addSubview:blurBar2];
+	[bottomBar layoutSubviews];
 }
 
-static void createBackdropBar()
+static void createBackdropBar(CAMTopBar *topBar)
 {
+	UIView *backgroundView;
+	object_getInstanceVariable(topBar, "__backgroundView", (void **)&backgroundView);
 	backdropBar = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:backdropBlurSettings()];
 	backdropBar.inputSettings.blurRadius = blurAmount;
 	backdropBar.outputSettings.blurRadius = blurAmount;
 	setBlurBarColor(backdropBar, YES);
+	if (backgroundView != nil)
+		[backgroundView addSubview:backdropBar];
+	else
+		[topBar addSubview:backdropBar];
 }
 
-static void createBackdropBar2()
+static void createBackdropBar2(CAMBottomBar *bottomBar)
 {
+	UIView *backgroundView;
+	object_getInstanceVariable(bottomBar, "_backgroundView", (void **)&backgroundView);
 	backdropBar2 = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:backdropBlurSettings()];
 	backdropBar2.inputSettings.blurRadius = blurAmount;
 	backdropBar2.outputSettings.blurRadius = blurAmount;
 	setBlurBarColor(backdropBar2, NO);
+	if (backgroundView != nil)
+		[backgroundView addSubview:backdropBar2];
+	else
+		[bottomBar addSubview:backdropBar2];
+}
+
+static void createBlurryTopBar(CAMTopBar *topBar)
+{
+	if (blurTop) {
+		if (useBackdrop)
+			createBackdropBar(topBar);
+		else
+			createBlurBar(topBar);
+	}
+}
+
+static void createBlurryBottomBar(CAMBottomBar *bottomBar)
+{
+	if (blurBottom) {
+		if (useBackdrop)
+			createBackdropBar2(bottomBar);
+    	else
+    		createBlurBar2(bottomBar);
+    }
 }
 
 static void releaseBlurBars()
@@ -178,9 +232,9 @@ static void showBottomBar(BOOL show)
 
 static void showBar(BOOL show)
 {
-	if (handleVideoTB)
+	if (handleVideoTB || handlePanoTB)
 		showTopBar(show);
-	if (handleVideoBB)
+	if (handleVideoBB || handlePanoBB)
 		showBottomBar(show);
 }
 
@@ -190,7 +244,7 @@ static void configureShadowLegibility(UIView *view)
 {
 	if (!readable) return;
 	if (view) {
-		view.layer.shadowColor = [[UIColor blackColor] CGColor];
+		view.layer.shadowColor = [UIColor blackColor].CGColor;
 		view.layer.shadowRadius = 3.0f;
 		view.layer.shadowOpacity = 1.0f;
 		view.layer.shadowOffset = CGSizeZero;
@@ -214,7 +268,7 @@ static void configureImageLegibility(UIImageView *imageView)
 			[provider pl_primeForUseWithCameraOverlays];
 			_UILegibilitySettings *settings = [[provider settings] retain];
 			UIImage *image = [imageView.image retain];
-			imageLegibilityView = [[_UILegibilityView alloc] initWithSettings:settings strength:2.5 image:image shadowImage:nil options:_UILegibilityViewOptionUsesColorFilters];
+			imageLegibilityView = [[_UILegibilityView alloc] initWithSettings:settings strength:2.5f image:image shadowImage:nil options:_UILegibilityViewOptionUsesColorFilters];
 			[image release];
 			[settings release];
 			[provider release];
@@ -321,7 +375,7 @@ static void configureLegibilityOfFlashButton(UIView <cameraViewDelegate> *self)
 			configureImageLegibility(imageView);
 			for (CAMButtonLabel *label in flashButton.subviews) {
 				if ([label isKindOfClass:objc_getClass("CAMButtonLabel")])
-					[label setUseLegibilityView:YES];
+					label.useLegibilityView = YES;
 			}
 		}
 	}
@@ -334,8 +388,9 @@ static void configureLegibilityOfFlashButton(UIView <cameraViewDelegate> *self)
 - (void)layoutSubviews
 {
 	%orig;
-	CGRect frame = [self alignmentRectForFrame:self.bounds];
-	layoutBlurBar(frame);
+	UIView *backgroundView;
+	object_getInstanceVariable(self, "__backgroundView", (void **)&backgroundView);
+	layoutBlurBar(backgroundView != nil ? backgroundView.bounds : self.bounds);
 }
 
 %end
@@ -345,20 +400,17 @@ static void configureLegibilityOfFlashButton(UIView <cameraViewDelegate> *self)
 - (void)_layoutForVerticalOrientation
 {
 	%orig;
-	Class CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController");
-	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[CameraController sharedInstance] isCapturingVideo] && handleVideoBB))
-		return;
-	layoutBlurBar2(self.bounds);
+	UIView *backgroundView;
+	object_getInstanceVariable(self, "_backgroundView", (void **)&backgroundView);
+	layoutBlurBar2(backgroundView != nil ? backgroundView.bounds : self.bounds);
 }
 
 - (void)_layoutForHorizontalOrientation
 {
 	%orig;
-	Class CameraController = isiOS8 ? objc_getClass("CAMCaptureController") : objc_getClass("PLCameraController");
-	if (([[CameraController sharedInstance].effectsRenderer isShowingGrid] && handleEffectBB) || ([[CameraController sharedInstance] isCapturingVideo] && handleVideoBB))
-		return;
-	UIView *backgroundView = isiOS8Up ? MSHookIvar<UIView *>(self, "_backgroundView") : self;
-	layoutBlurBar2(backgroundView.bounds);
+	UIView *backgroundView;
+	object_getInstanceVariable(self, "_backgroundView", (void **)&backgroundView);
+	layoutBlurBar2(backgroundView != nil ? backgroundView.bounds : self.bounds);
 }
 
 %end
@@ -384,7 +436,7 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 
 %hook CAMModeDial
 
-- (void)setSelectedIndex:(unsigned)index animated:(BOOL)animated
+- (void)setSelectedIndex:(NSUInteger)index animated:(BOOL)animated
 {
 	%orig;
 	CAMModeDialConfigure(self);
@@ -413,16 +465,7 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 - (void)_commonCAMTopBarInitialization
 {
 	%orig;
-	if (blurTop) {
-		UIView *backgroundView = MSHookIvar<UIView *>(self, "__backgroundView");
-		if (useBackdrop) {
-			createBackdropBar();
-			[backgroundView addSubview:backdropBar];
-		} else {
-			createBlurBarWithFrame(CGRectZero);
-			[backgroundView addSubview:blurBar];
-		}
-	}
+	createBlurryTopBar(self);
 }
 
 - (void)dealloc
@@ -438,16 +481,7 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 - (void)_commonCAMBottomBarInitialization
 {
 	%orig;
-	if (blurBottom) {
-		UIView *backgroundView = isiOS8Up ? MSHookIvar<UIView *>(self, "_backgroundView") : self;
-		if (useBackdrop) {
-			createBackdropBar2();
-			[backgroundView addSubview:backdropBar2];
-    	} else {
-    		createBlurBar2WithFrame(CGRectZero);
-			[backgroundView addSubview:blurBar2];
-    	}
-    }
+	createBlurryBottomBar(self);
 }
 
 - (void)dealloc
@@ -464,7 +498,7 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 
 %hook PLCameraView
 
-- (BOOL)_shouldHideFlipButtonForMode:(int)mode
+- (BOOL)_shouldHideFlipButtonForMode:(NSInteger)mode
 {
 	BOOL orig = %orig;
 	if (!orig)
@@ -496,14 +530,20 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 	configureLegibilityOfShutterButton(self);
 }
 
-- (void)_hideControlsForChangeToMode:(int)mode animated:(BOOL)animated
+%new
+- (BOOL)cb7_shouldHideBlurryTopBarForMode:(NSInteger)mode
+{
+	if (handlePanoTB) {
+		if ([self _isCapturing] || self._topBar.backgroundStyle == 1)
+			return YES;
+	}
+	return [self _shouldHideTopBarForMode:mode];
+}
+
+- (void)_hideControlsForChangeToMode:(NSInteger)mode animated:(BOOL)animated
 {
 	%orig;
-	CAMTopBar *topBar = self._topBar;
-	if (topBar) {
-		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
-		showTopBar(topBarStyle != 1);
-	}
+	showTopBar(![self cb7_shouldHideBlurryTopBarForMode:mode]);
 }
 
 - (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
@@ -524,25 +564,17 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 	showBar(!showEffectsGrid);
 }
 
-- (void)_showControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
+- (void)startPanorama
 {
-	CAMTopBar *topBar = self._topBar;
-	if (topBar) {
-		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
-		if (topBarStyle != 1)
-			showBar(NO);
-	}
+	showBar(NO);
+	showTopBar(![self cb7_shouldHideBlurryTopBarForMode:3]);
 	%orig;
 }
 
-- (void)_hideControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
+- (void)stopPanorama
 {
-	CAMTopBar *topBar = self._topBar;
-	if (topBar) {
-		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
-		if (topBarStyle != 1)
-			showBar(YES);
-	}
+	if (![self cb7_shouldHideBlurryTopBarForMode:3])
+		showBar(YES);
 	%orig;
 }
 
@@ -554,7 +586,7 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 
 %hook CAMCameraView
 
-- (BOOL)_shouldHideFlipButtonForMode:(int)mode
+- (BOOL)_shouldHideFlipButtonForMode:(NSInteger)mode
 {
 	BOOL orig = %orig;
 	if (!orig)
@@ -592,14 +624,20 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 	configureLegibilityOfShutterButton(self);
 }
 
-- (void)_hideControlsForChangeToMode:(int)mode animated:(BOOL)animated
+%new
+- (BOOL)cb7_shouldHideBlurryTopBarForMode:(NSInteger)mode
+{
+	if (handlePanoTB) {
+		if ([self _isCapturing] || self._topBar.backgroundStyle == 1)
+			return YES;
+	}
+	return [self _shouldHideTopBarForMode:mode];
+}
+
+- (void)_hideControlsForChangeToMode:(NSInteger)mode animated:(BOOL)animated
 {
 	%orig;
-	CAMTopBar *topBar = self._topBar;
-	if (topBar) {
-		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
-		showTopBar(topBarStyle != 1);
-	}
+	showTopBar(![self cb7_shouldHideBlurryTopBarForMode:mode]);
 }
 
 - (void)_showControlsForCapturingVideoAnimated:(BOOL)capturingVideoAnimated
@@ -622,23 +660,13 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 
 - (void)_showControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	CAMTopBar *topBar = self._topBar;
-	if (topBar) {
-		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
-		if (topBarStyle != 1)
-			showBar(NO);
-	}
+	showBar(NO);
 	%orig;
 }
 
 - (void)_hideControlsForCapturingPanoramaAnimated:(BOOL)capturingPanoramaAnimated
 {
-	CAMTopBar *topBar = self._topBar;
-	if (topBar) {
-		int topBarStyle = MSHookIvar<int>(topBar, "_backgroundStyle");
-		if (topBarStyle != 1)
-			showBar(YES);
-	}
+	showBar(![self _shouldHideTopBarForMode:self.cameraMode]);
 	%orig;
 }
 
@@ -650,7 +678,8 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 
 - (void)_hideControlsForCapturingTimelapseAnimated:(BOOL)capturingTimelapseAnimated
 {
-	showBar(YES);
+	if (![self cb7_shouldHideBlurryTopBarForMode:3])
+		showBar(YES);
 	%orig;
 }
 
@@ -664,7 +693,7 @@ BOOL shouldInjectUIKit()
 	NSArray *args = [[NSClassFromString(@"NSProcessInfo") processInfo] arguments];
 	NSUInteger count = [args count];
 	if (count != 0) {
-		NSString *executablePath = [args objectAtIndex:0];
+		NSString *executablePath = args[0];
 		if (executablePath) {
 			NSString *processName = [executablePath lastPathComponent];
 			BOOL isApplication = [executablePath rangeOfString:@"/Application"].location != NSNotFound;

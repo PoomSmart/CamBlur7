@@ -1,7 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <Preferences/Preferences.h>
 #import <Preferences/PSListController.h>
-#import <Preferences/PSTableCell.h>
 #import <Social/Social.h>
 #import "NKOColorPickerView.h"
 #import <dlfcn.h>
@@ -10,10 +9,6 @@
 
 NSString *const updateCellColorNotification = @"com.PS.CamBlur7.prefs.colorUpdate";
 NSString *const IdentifierKey = @"CB7ColorCellIdentifier";
-
-@interface PSSwitchTableCell : PSControlTableCell
-- (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 specifier:(id)arg3;
-@end
 
 __attribute__((visibility("hidden")))
 @interface CB7PreferenceController : PSListController
@@ -78,8 +73,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 - (UIView *)colorCellForIdentifier:(NSString *)identifier
 {
-	UIView *circle = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
-	circle.layer.cornerRadius = 14;
+	UIView *circle = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 28.0f, 28.0f)];
+	circle.layer.cornerRadius = 14.0f;
 	circle.backgroundColor = savedCustomColor(identifier);
 	return circle;
 }
@@ -110,11 +105,11 @@ static UIColor *savedCustomColor(NSString *identifier)
  
 @implementation PSXSwitchTableCell
  
-- (id)initWithStyle:(int)arg1 reuseIdentifier:(id)arg2 specifier:(id)arg3
+- (id)initWithStyle:(NSInteger)style reuseIdentifier:(id)identifier specifier:(id)spec
 {
-	self = [super initWithStyle:arg1 reuseIdentifier:arg2 specifier:arg3];
+	self = [super initWithStyle:style reuseIdentifier:identifier specifier:spec];
 	if (self)
-		[((UISwitch *)[self control]) setOnTintColor:[UIColor systemBlueColor]];
+		((UISwitch *)[self control]).onTintColor = [UIColor systemBlueColor];
 	return self;
 }
  
@@ -131,7 +126,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 		UISegmentedControl *modes = [[[UISegmentedControl alloc] initWithItems:@[@"Default", @"Low"]] autorelease];
 		[modes addTarget:self action:@selector(modeAction:) forControlEvents:UIControlEventValueChanged];
 		modes.selectedSegmentIndex = integerValueForKey(QualityKey, 0);
-		[self setAccessoryView:modes];
+		self.accessoryView = modes;
 	}
 	return self;
 }
@@ -184,7 +179,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 - (id)initWithIdentifier:(NSString *)identifier
 {
 	if (self == [super init]) {
-		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0, 0, 300, 340) color:[[self savedCustomColor:identifier] retain] identifier:identifier delegate:self] autorelease];
+		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 300.0f, 340.0f) color:[[self savedCustomColor:identifier] retain] identifier:identifier delegate:self] autorelease];
 		colorPickerView.backgroundColor = [UIColor blackColor];
 		self.view = colorPickerView;
 		self.navigationItem.title = @"Select Color";
@@ -284,8 +279,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 	
 		if (IPAD) {
 			if (dlopen("/Library/MobileSubstrate/DynamicLibraries/FrontFlash.dylib", RTLD_LAZY) != NULL) {
-				for (NSUInteger i = 0; i < [specs count]; i++) {
-					PSSpecifier *spec = [specs objectAtIndex:i];
+				for (NSUInteger i = 0; i < specs.count; i++) {
+					PSSpecifier *spec = specs[i];
 					NSString *Id = [spec identifier];
 					if ([Id hasPrefix:@"topBar"])
 						[specs removeObjectAtIndex:i];
