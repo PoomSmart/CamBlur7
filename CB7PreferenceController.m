@@ -19,6 +19,9 @@ __attribute__((visibility("hidden")))
 @property (retain) NSString *identifier;
 @end
 
+@interface PSSwitchTableCell : PSControlTableCell
+@end
+
 @interface CB7ColorCell : PSTableCell
 @end
 
@@ -126,7 +129,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 		UISegmentedControl *modes = [[[UISegmentedControl alloc] initWithItems:@[@"Default", @"Low"]] autorelease];
 		[modes addTarget:self action:@selector(modeAction:) forControlEvents:UIControlEventValueChanged];
 		modes.selectedSegmentIndex = integerValueForKey(QualityKey, 0);
-		self.accessoryView = modes;
+		[self setAccessoryView:modes];
 	}
 	return self;
 }

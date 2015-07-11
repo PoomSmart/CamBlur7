@@ -1,6 +1,5 @@
 #import <substrate.h>
 #import <objc/runtime.h>
-#import "Backdrop.h"
 #import "CKCB7BlurView.h"
 #import "Common.h"
 #import "../PS.h"
@@ -14,10 +13,10 @@
 - (BOOL)cb7_shouldHideBlurryTopBarForMode:(NSInteger)mode;
 @end
 
-static CKCB7BlurView *blurBar = nil;
-static CKCB7BlurView *blurBar2 = nil;
-static _UIBackdropView *backdropBar = nil;
-static _UIBackdropView *backdropBar2 = nil;
+CKCB7BlurView *blurBar = nil;
+CKCB7BlurView *blurBar2 = nil;
+_UIBackdropView *backdropBar = nil;
+_UIBackdropView *backdropBar2 = nil;
 
 static BOOL useBackdrop;
 
@@ -37,15 +36,20 @@ static NSString *quality;
 static void loadPrefs()
 {
 	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
+	id val;
 	#define BoolOpt(option) \
-		option = dict[[NSString stringWithUTF8String:#option]] ? [dict[[NSString stringWithUTF8String:#option]] boolValue] : YES;
+		val = dict[[NSString stringWithUTF8String:#option]]; \
+		option = val ? [val boolValue] : YES;
 	#define FloatOpt(option) \
-		option = dict[[NSString stringWithUTF8String:#option]] ? [dict[[NSString stringWithUTF8String:#option]] floatValue] : 0.35f;
+		val = dict[[NSString stringWithUTF8String:#option]]; \
+		option = val ? [val floatValue] : 0.35f;
 	BoolOpt(blur)
 	BoolOpt(blurTop)
 	BoolOpt(blurBottom)
-	useBackdrop = dict[@"useBackdrop"] ? [dict[@"useBackdrop"] boolValue] : NO;
-	readable = dict[@"readable"] ? [dict[@"readable"] boolValue] : NO;
+	val = dict[@"useBackdrop"];
+	useBackdrop = [val boolValue];
+	val = dict[@"readable"];
+	readable = [val boolValue];
 	BoolOpt(handleEffectTB)
 	BoolOpt(handleEffectBB)
 	BoolOpt(handleVideoTB)
@@ -58,9 +62,11 @@ static void loadPrefs()
 	FloatOpt(HuebottomBar)
 	FloatOpt(SatbottomBar)
 	FloatOpt(BribottomBar)
-	int value = dict[QualityKey] ? [dict[QualityKey] intValue] : 0;
+	val = dict[QualityKey];
+	int value = val ? [val intValue] : 0;
 	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
-	blurAmount = dict[@"blurAmount"] ? [dict[@"blurAmount"] floatValue] : 20.0f;
+	val = dict[@"blurAmount"];
+	blurAmount = val ? [val floatValue] : 20.0f;
 }
 
 static void setBlurBarColor(id bar, BOOL top)
@@ -137,7 +143,8 @@ static void createBlurBar2(CAMBottomBar *bottomBar)
 		[backgroundView addSubview:blurBar2];
 	else
 		[bottomBar addSubview:blurBar2];
-	[bottomBar layoutSubviews];
+	if (!isiOS83Up)
+		[bottomBar layoutSubviews];
 }
 
 static void createBackdropBar(CAMTopBar *topBar)
