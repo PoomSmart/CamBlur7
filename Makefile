@@ -1,15 +1,19 @@
 GO_EASY_ON_ME = 1
-SDKVERSION = 7.0
+TARGET = iphone:latest:7.0
 ARCHS = armv7 arm64
 
 include theos/makefiles/common.mk
+
+AGGREGATE_NAME = CamBlur7
+SUBPROJECTS = CamBlur7iOS7 CamBlur7iOS8 CamBlur7iOS9
+
+include $(THEOS_MAKE_PATH)/aggregate.mk
+
 TWEAK_NAME = CamBlur7
-CamBlur7_FILES = Tweak.xm CKCB7BlurView.m
-CamBlur7_FRAMEWORKS = UIKit CoreGraphics
-CamBlur7_PRIVATE_FRAMEWORKS = QuartzCore
+CamBlur7_FILES = Tweak.xm
 
 include $(THEOS_MAKE_PATH)/tweak.mk
-	
+
 BUNDLE_NAME = CamBlur7Settings
 CamBlur7Settings_FILES = CB7PreferenceController.m NKOColorPickerView.m
 CamBlur7Settings_INSTALL_PATH = /Library/PreferenceBundles
