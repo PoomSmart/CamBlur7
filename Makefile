@@ -1,5 +1,5 @@
 GO_EASY_ON_ME = 1
-TARGET = iphone:latest:7.0
+SDKVERSION = 9.0
 ARCHS = armv7 arm64
 
 include theos/makefiles/common.mk

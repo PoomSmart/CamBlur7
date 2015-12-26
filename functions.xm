@@ -12,9 +12,15 @@ static void loadPrefs()
 	#define BoolOpt(option) \
 		val = dict[[NSString stringWithUTF8String:#option]]; \
 		option = val ? [val boolValue] : YES;
+	#if CGFLOAT_IS_DOUBLE
 	#define FloatOpt(option) \
 		val = dict[[NSString stringWithUTF8String:#option]]; \
-		option = val ? [val floatValue] : 0.35f;
+		option = val ? [val doubleValue] : 0.35;
+	#else
+	#define FloatOpt(option) \
+		val = dict[[NSString stringWithUTF8String:#option]]; \
+		option = val ? [val floatValue] : 0.35;
+	#endif
 	BoolOpt(blur)
 	BoolOpt(blurTop)
 	BoolOpt(blurBottom)
@@ -38,7 +44,11 @@ static void loadPrefs()
 	int value = val ? [val intValue] : 0;
 	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
 	val = dict[@"blurAmount"];
-	blurAmount = val ? [val floatValue] : 20.0f;
+	#if CGFLOAT_IS_DOUBLE
+	blurAmount = val ? [val doubleValue] : 20.0;
+	#else
+	blurAmount = val ? [val floatValue] : 20.0;
+	#endif
 }
 
 static void setBlurBarColor(id bar, BOOL top)
@@ -63,7 +73,7 @@ static _UIBackdropViewSettings *backdropBlurSettings()
 {
 	_UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:0];
 	settings.usesColorTintView = YES;
-	settings.colorTintAlpha = 0.5f;
+	settings.colorTintAlpha = 0.5;
 	settings.requiresColorStatistics = YES;
 	settings.blurRadius = blurAmount;
 	settings.blurQuality = quality;

@@ -7,8 +7,8 @@
 #import "Common.h"
 #import "../PS.h"
 
-NSString *const updateCellColorNotification = @"com.PS.CamBlur7.prefs.colorUpdate";
-NSString *const IdentifierKey = @"CB7ColorCellIdentifier";
+NSString *updateCellColorNotification = @"com.PS.CamBlur7.prefs.colorUpdate";
+NSString *IdentifierKey = @"CB7ColorCellIdentifier";
 
 __attribute__((visibility("hidden")))
 @interface CB7PreferenceController : PSListController
@@ -54,9 +54,15 @@ static UIColor *savedCustomColor(NSString *identifier)
 	if (dict[hueKey] == nil || dict[satKey] == nil|| dict[briKey] == nil)
 		return [UIColor blackColor];
 	CGFloat hue, sat, bri;
+	#if CGFLOAT_IS_DOUBLE
+	hue = [dict[hueKey] doubleValue];
+	sat = [dict[satKey] doubleValue];
+	bri = [dict[briKey] doubleValue];
+	#else
 	hue = [dict[hueKey] floatValue];
 	sat = [dict[satKey] floatValue];
 	bri = [dict[briKey] floatValue];
+	#endif
 	UIColor *color = [UIColor colorWithHue:hue saturation:sat brightness:bri alpha:1];
 	return color;
 }
@@ -76,7 +82,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 - (UIView *)colorCellForIdentifier:(NSString *)identifier
 {
-	UIView *circle = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 28.0f, 28.0f)];
+	UIView *circle = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, 28.0, 28.0)];
 	circle.layer.cornerRadius = 14.0f;
 	circle.backgroundColor = savedCustomColor(identifier);
 	return circle;
@@ -182,7 +188,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 - (id)initWithIdentifier:(NSString *)identifier
 {
 	if (self == [super init]) {
-		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 300.0f, 340.0f) color:[[self savedCustomColor:identifier] retain] identifier:identifier delegate:self] autorelease];
+		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0.0, 0.0, 300.0, 340.0) color:[[self savedCustomColor:identifier] retain] identifier:identifier delegate:self] autorelease];
 		colorPickerView.backgroundColor = [UIColor blackColor];
 		self.view = colorPickerView;
 		self.navigationItem.title = @"Select Color";
@@ -193,7 +199,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 - (void)dismissPicker
 {
-	NSMutableDictionary *dict = [[NSMutableDictionary dictionaryWithContentsOfFile:PREF_PATH] mutableCopy] ?: [NSMutableDictionary dictionary];
+	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+	[dict addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:PREF_PATH]];
     CGFloat hue, sat, bri;
     NSString *identifier = self.identifier;
     BOOL getColor = [self.color getHue:&hue saturation:&sat brightness:&bri alpha:nil];

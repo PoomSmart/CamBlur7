@@ -162,10 +162,10 @@
 	%orig;
 }
 
-- (void)cameraEffectsRenderer:(id)renderer didStartTransitionToShowEffectsGrid:(BOOL)showEffectsGrid animated:(BOOL)animated
+- (void)cameraEffectsRenderer:(id)renderer didStartTransitionToShowGrid:(BOOL)showGrid animated:(BOOL)animated
 {
 	%orig;
-	showBar(!showEffectsGrid);
+	showBar(!showGrid);
 }
 
 %end
