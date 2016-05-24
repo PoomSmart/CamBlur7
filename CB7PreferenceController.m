@@ -286,7 +286,6 @@ static UIColor *savedCustomColor(NSString *identifier)
 {
 	if (_specifiers == nil) {
 		NSMutableArray *specs = [NSMutableArray arrayWithArray:[self loadSpecifiersFromPlistName:@"CamBlur7" target:self]];
-	
 		if (IPAD) {
 			if (dlopen("/Library/MobileSubstrate/DynamicLibraries/FrontFlash.dylib", RTLD_LAZY) != NULL) {
 				for (NSUInteger i = 0; i < specs.count; i++) {

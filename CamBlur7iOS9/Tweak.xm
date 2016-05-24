@@ -4,6 +4,7 @@
 #import "../Common.h"
 #import "../Tweak.h"
 #import "../../PS.h"
+#define TIMER
 #import "../functions.xm"
 
 @interface CAMViewfinderViewController (CB7)
@@ -178,7 +179,7 @@
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, PreferencesChangedNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
 	loadPrefs();
 	if (blur) {
-		dlopen("/System/Library/PrivateFrameworks/CameraUI.framework/CameraUI", RTLD_LAZY);
+		openCamera9();
 		%init;
 		if (!useBackdrop) {
 			%init(CKCB7BlurView);

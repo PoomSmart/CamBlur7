@@ -4,6 +4,7 @@
 #import "../Common.h"
 #import "../Tweak.h"
 #import "../../PS.h"
+#define TIMER
 #import "../functions.xm"
 
 @interface CAMCameraView (CB7)
@@ -213,7 +214,7 @@
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, PreferencesChangedNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
 	loadPrefs();
 	if (blur) {
-		dlopen("/System/Library/PrivateFrameworks/CameraKit.framework/CameraKit", RTLD_LAZY);
+		openCamera8();
 		%init;
 		if (!useBackdrop) {
 			%init(CKCB7BlurView);

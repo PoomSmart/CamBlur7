@@ -196,7 +196,7 @@
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, PreferencesChangedNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
 	loadPrefs();
 	if (blur) {
-		dlopen("/System/Library/PrivateFrameworks/PhotoLibrary.framework/PhotoLibrary", RTLD_LAZY);
+		openCamera7();
 		%init;
 		if (!useBackdrop) {
 			%init(CKCB7BlurView);

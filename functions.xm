@@ -19,7 +19,7 @@ static void loadPrefs()
 	#else
 	#define FloatOpt(option) \
 		val = dict[[NSString stringWithUTF8String:#option]]; \
-		option = val ? [val floatValue] : 0.35;
+		option = val ? [val floatValue] : 0.35f;
 	#endif
 	BoolOpt(blur)
 	BoolOpt(blurTop)
@@ -47,7 +47,7 @@ static void loadPrefs()
 	#if CGFLOAT_IS_DOUBLE
 	blurAmount = val ? [val doubleValue] : 20.0;
 	#else
-	blurAmount = val ? [val floatValue] : 20.0;
+	blurAmount = val ? [val floatValue] : 20.0f;
 	#endif
 }
 
@@ -299,6 +299,7 @@ static void configureLabelLegibilityOfHDRButton(CAMHDRButton *hdrButton)
 	}
 }
 
+#ifdef TIMER
 static void configureLegibilityOfTimerButton(CAMTimerButton *timerButton)
 {
 	if (!readable) return;
@@ -315,6 +316,7 @@ static void configureLegibilityOfTimerButton(CAMTimerButton *timerButton)
 		}
 	}
 }
+#endif
 
 static void configureLegibilityOfFlipButton(CAMFlipButton *flipButton)
 {
@@ -407,11 +409,12 @@ BOOL shouldInjectUIKit()
 		if (executablePath) {
 			NSString *processName = [executablePath lastPathComponent];
 			BOOL isApplication = [executablePath rangeOfString:@"/Application"].location != NSNotFound;
+			BOOL isExtension = [executablePath rangeOfString:@".appex"].location != NSNotFound;
 			BOOL isSpringBoard = [processName isEqualToString:@"SpringBoard"];
 			BOOL isMail = [processName isEqualToString:@"MobileMail"];
 			BOOL isPref = [processName isEqualToString:@"Preferences"];
 			BOOL notOkay = isMail || isPref;
-			inject = (isApplication || isSpringBoard) && !notOkay;
+			inject = (isApplication || isSpringBoard) && !notOkay && !isExtension;
 		}
 	}
 	return inject;

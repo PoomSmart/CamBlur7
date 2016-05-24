@@ -1,8 +1,9 @@
 GO_EASY_ON_ME = 1
 SDKVERSION = 9.0
 ARCHS = armv7 arm64
+DEBUG = 0
 
-include theos/makefiles/common.mk
+include $(THEOS)/makefiles/common.mk
 
 AGGREGATE_NAME = CamBlur7
 SUBPROJECTS = CamBlur7iOS7 CamBlur7iOS8 CamBlur7iOS9
