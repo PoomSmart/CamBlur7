@@ -15,20 +15,9 @@
     </dict>
     <key>items</key>
     <array>
-      <dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>label</key>
-      	<string>Blur Effect</string>
-        <key>footerText</key>
-        <string>❗ If Use Backdrop effect option is enabled, the camera bars blur style will be backdrop. (iOS common blurring method)
-🔵 Legibility option provides readable text presented on blur bars by adding shadow behind them. Useful if blur color is too bright.</string>
-      </dict>
-      <dict>
+    <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -38,7 +27,18 @@
         <key>label</key>
         <string>Enabled</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
+		<key>set</key>
+        <string>masterSwitch:specifier:</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+      	<string>Configurations</string>
+        <key>footerText</key>
+        <string>❗ If Backdrop effect option is enabled, the camera bars blur style will be backdrop. (iOS common blurring method)
+🔵 Legibility option provides readable text presented on blur bars by adding shadow behind them. Useful if blur color is too bright.</string>
       </dict>
        <dict>
 			<key>cell</key>
@@ -51,8 +51,6 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <false/>
         <key>defaults</key>
@@ -60,15 +58,15 @@
         <key>key</key>
         <string>useBackdrop</string>
         <key>label</key>
-        <string>Use Backdrop effect</string>
+        <string>Backdrop effect</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
+		<key>set</key>
+        <string>masterSwitch:specifier:</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <false/>
         <key>defaults</key>
@@ -76,9 +74,11 @@
         <key>key</key>
         <string>readable</string>
         <key>label</key>
-        <string>Legibility (BETA)</string>
+        <string>Legibility (Beta)</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
+		<key>set</key>
+        <string>masterSwitch:specifier:</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -91,8 +91,6 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -104,13 +102,13 @@
         <key>label</key>
         <string>Blur</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
+		<key>set</key>
+        <string>masterSwitch:specifier:</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -122,13 +120,11 @@
         <key>label</key>
         <string>Hide when effects</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -140,13 +136,11 @@
         <key>label</key>
         <string>Hide when video</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -158,7 +152,7 @@
         <key>label</key>
         <string>Hide when pano</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
       </dict>
       <dict>
       		<key>cell</key>
@@ -183,8 +177,6 @@
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -196,13 +188,13 @@
         <key>label</key>
         <string>Blur</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
+		<key>set</key>
+        <string>masterSwitch:specifier:</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -214,13 +206,11 @@
         <key>label</key>
         <string>Hide when effects</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -232,13 +222,11 @@
         <key>label</key>
         <string>Hide when video</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
       </dict>
       <dict>
         <key>cell</key>
         <string>PSSwitchCell</string>
-        <key>cellClass</key>
-        <string>PSXSwitchTableCell</string>
         <key>default</key>
         <true/>
         <key>defaults</key>
@@ -250,7 +238,7 @@
         <key>label</key>
         <string>Hide when pano</string>
         <key>PostNotification</key>
-		<string>com.PS.CamBlur7.prefs</string>
+		<string>com.PS.CamBlur7/ReloadPrefs</string>
       </dict>
       <dict>
       		<key>cell</key>
@@ -282,7 +270,7 @@
       </dict>
       <dict>
 			<key>PostNotification</key>
-			<string>com.PS.CamBlur7.prefs</string>
+			<string>com.PS.CamBlur7/ReloadPrefs</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>default</key>
@@ -298,35 +286,63 @@
 			<key>showValue</key>
 			<true/>
 		</dict>
+		 <dict>
+      		<key>cell</key>
+      		<string>PSGroupCell</string>
+      		<key>label</key>
+      		<string>You would need</string>
+      		<key>footerText</key>
+      		<string>So that you can experience the tweak in any camera mode.</string>
+      		<key>footerAlignment</key>
+      		<integer>1</integer>
+      </dict>
+      <dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>cellClass</key>
+			<string>HBLinkTableCell</string>
+			<key>label</key>
+			<string>TransparentCameraBar</string>
+			<key>url</key>
+			<string>cydia://package/org.thebigboss.transparentcamerabar</string>
+			<key>icon</key>
+			<string>CamBlur7.png</string>
+		</dict>
 		<dict>
       		<key>cell</key>
       		<string>PSGroupCell</string>
-      </dict>
-      <dict>
-      		<key>cell</key>
-      		<string>PSButtonCell</string>
-      		<key>action</key>
-      		<string>donate:</string>
       		<key>label</key>
-      		<string>♥ Donate</string>
-      </dict>
-      <dict>
-      		<key>cell</key>
-      		<string>PSButtonCell</string>
-      		<key>action</key>
-      		<string>twitter:</string>
-      		<key>label</key>
-      		<string>🔗 Developer's Twitter</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>footerAlignment</key>
-        <integer>1</integer>
-        <key>footerText</key>
-        <string>© 2013 - 2016 Thatchapon Unprasert
+      		<string>Developer</string>
+      		<key>footerAlignment</key>
+		<integer>1</integer>
+		<key>footerText</key>
+		<string>© 2013 - 2016 Thatchapon Unprasert
 (@PoomSmart)</string>
       </dict>
+      <dict>
+    	<key>big</key>
+    	<true/>
+    	<key>cellClass</key>
+		<string>HBTwitterCell</string>
+		<key>height</key>
+		<integer>60</integer>
+		<key>label</key>
+		<string>PoomSmart</string>
+		<key>user</key>
+		<string>PoomSmart</string>
+	</dict>
+      <dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>cellClass</key>
+			<string>HBLinkTableCell</string>
+			<key>label</key>
+			<string>Donate ❤️</string>
+			<key>alignment</key>
+			<integer>1</integer>
+			<key>url</key>
+			<string>http://poomsmartios.blogspot.com/2015/08/donation.html</string>
+		</dict>
     </array>
   </dict>
 </plist>

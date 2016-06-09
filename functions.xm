@@ -3,53 +3,6 @@
 #import "Tweak.h"
 #import <objc/runtime.h>
 #import <CoreGraphics/CoreGraphics.h>
-#include <substrate.h>
-
-static void loadPrefs()
-{
-	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
-	id val;
-	#define BoolOpt(option) \
-		val = dict[[NSString stringWithUTF8String:#option]]; \
-		option = val ? [val boolValue] : YES;
-	#if CGFLOAT_IS_DOUBLE
-	#define FloatOpt(option) \
-		val = dict[[NSString stringWithUTF8String:#option]]; \
-		option = val ? [val doubleValue] : 0.35;
-	#else
-	#define FloatOpt(option) \
-		val = dict[[NSString stringWithUTF8String:#option]]; \
-		option = val ? [val floatValue] : 0.35f;
-	#endif
-	BoolOpt(blur)
-	BoolOpt(blurTop)
-	BoolOpt(blurBottom)
-	val = dict[@"useBackdrop"];
-	useBackdrop = [val boolValue];
-	val = dict[@"readable"];
-	readable = [val boolValue];
-	BoolOpt(handleEffectTB)
-	BoolOpt(handleEffectBB)
-	BoolOpt(handleVideoTB)
-	BoolOpt(handleVideoBB)
-	BoolOpt(handlePanoTB)
-	BoolOpt(handlePanoBB)
-	FloatOpt(HuetopBar)
-	FloatOpt(SattopBar)
-	FloatOpt(BritopBar)
-	FloatOpt(HuebottomBar)
-	FloatOpt(SatbottomBar)
-	FloatOpt(BribottomBar)
-	val = dict[QualityKey];
-	int value = val ? [val intValue] : 0;
-	quality = value == 1 ? CKBlurViewQualityLow : CKBlurViewQualityDefault;
-	val = dict[@"blurAmount"];
-	#if CGFLOAT_IS_DOUBLE
-	blurAmount = val ? [val doubleValue] : 20.0;
-	#else
-	blurAmount = val ? [val floatValue] : 20.0f;
-	#endif
-}
 
 static void setBlurBarColor(id bar, BOOL top)
 {
@@ -418,10 +371,4 @@ BOOL shouldInjectUIKit()
 		}
 	}
 	return inject;
-}
-
-static void PostNotification(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
-{
-	system("killall Camera");
-	loadPrefs();
 }

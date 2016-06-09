@@ -1,17 +1,20 @@
 #import <UIKit/UIKit.h>
-#import <Preferences/Preferences.h>
-#import <Preferences/PSListController.h>
+#import <Preferences/PSTableCell.h>
+#import <Cephei/HBListController.h>
+#import <Cephei/HBAppearanceSettings.h>
 #import <Social/Social.h>
 #import "NKOColorPickerView.h"
 #import <dlfcn.h>
 #import "Common.h"
 #import "../PS.h"
+#import <HBPreferences.h>
 
 NSString *updateCellColorNotification = @"com.PS.CamBlur7.prefs.colorUpdate";
 NSString *IdentifierKey = @"CB7ColorCellIdentifier";
 
-__attribute__((visibility("hidden")))
-@interface CB7PreferenceController : PSListController
+HBPreferences *preferences;
+
+@interface CB7PreferenceController : HBListController
 @end
 
 @interface CB7ColorPickerViewController : UIViewController
@@ -19,50 +22,18 @@ __attribute__((visibility("hidden")))
 @property (retain) NSString *identifier;
 @end
 
-@interface PSSwitchTableCell : PSControlTableCell
-@end
-
 @interface CB7ColorCell : PSTableCell
 @end
 
-static NSDictionary *prefDict()
-{
-	return [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
-}
-
-static int integerValueForKey(NSString *key, int defaultValue)
-{
-	NSDictionary *pref = prefDict();
-	return pref[key] ? [pref[key] intValue] : defaultValue;
-}
-
-static void writeIntegerValueForKey(int value, NSString *key)
-{
-	NSMutableDictionary *dict = [prefDict() mutableCopy] ?: [NSMutableDictionary dictionary];
-	[dict setObject:@(value) forKey:key];
-	BOOL write = [dict writeToFile:PREF_PATH atomically:NO];
-	if (write)
-		CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), PreferencesChangedNotification, NULL, NULL, YES);
-}
-
 static UIColor *savedCustomColor(NSString *identifier)
 {
-	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
 	NSString *hueKey = [@"Hue" stringByAppendingString:identifier];
 	NSString *satKey = [@"Sat" stringByAppendingString:identifier];
 	NSString *briKey = [@"Bri" stringByAppendingString:identifier];
-	if (dict[hueKey] == nil || dict[satKey] == nil|| dict[briKey] == nil)
-		return [UIColor blackColor];
 	CGFloat hue, sat, bri;
-	#if CGFLOAT_IS_DOUBLE
-	hue = [dict[hueKey] doubleValue];
-	sat = [dict[satKey] doubleValue];
-	bri = [dict[briKey] doubleValue];
-	#else
-	hue = [dict[hueKey] floatValue];
-	sat = [dict[satKey] floatValue];
-	bri = [dict[briKey] floatValue];
-	#endif
+	hue = [preferences floatForKey:hueKey];
+	sat = [preferences floatForKey:satKey];
+	bri = [preferences floatForKey:briKey];
 	UIColor *color = [UIColor colorWithHue:hue saturation:sat brightness:bri alpha:1];
 	return color;
 }
@@ -74,8 +45,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 	if (self == [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier specifier:specifier]) {
 		NSString *identifier = [specifier identifier];
 		[self updateColorCellForIdentifier:identifier];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateColorCell:) name:updateCellColorNotification object:nil];
-		[[NSUserDefaults standardUserDefaults] synchronize];
+		[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(updateColorCell:) name:updateCellColorNotification object:nil];
 	}
 	return self;
 }
@@ -97,31 +67,16 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 - (void)updateColorCellForIdentifier:(NSString *)identifier
 {
-	[self setAccessoryView:[[self colorCellForIdentifier:identifier] retain]];
-	[[self titleTextLabel] setTextColor:savedCustomColor(identifier)];
+	self.accessoryView = [[self colorCellForIdentifier:identifier] retain];
+	self.titleLabel.textColor = savedCustomColor(identifier);
 }
 
 - (void)dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[NSNotificationCenter.defaultCenter removeObserver:self];
 	[super dealloc];
 }
 
-@end
-
-@interface PSXSwitchTableCell : PSSwitchTableCell
-@end
- 
-@implementation PSXSwitchTableCell
- 
-- (id)initWithStyle:(NSInteger)style reuseIdentifier:(id)identifier specifier:(id)spec
-{
-	self = [super initWithStyle:style reuseIdentifier:identifier specifier:spec];
-	if (self)
-		((UISwitch *)[self control]).onTintColor = [UIColor systemBlueColor];
-	return self;
-}
- 
 @end
 
 @interface BlurQualityCell : PSTableCell
@@ -134,15 +89,16 @@ static UIColor *savedCustomColor(NSString *identifier)
 	if (self == [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier specifier:specifier]) {
 		UISegmentedControl *modes = [[[UISegmentedControl alloc] initWithItems:@[@"Default", @"Low"]] autorelease];
 		[modes addTarget:self action:@selector(modeAction:) forControlEvents:UIControlEventValueChanged];
-		modes.selectedSegmentIndex = integerValueForKey(QualityKey, 0);
-		[self setAccessoryView:modes];
+		modes.selectedSegmentIndex = [preferences integerForKey:QualityKey];
+		self.accessoryView = modes;
 	}
 	return self;
 }
 
 - (void)modeAction:(UISegmentedControl *)segment
 {
-	writeIntegerValueForKey(segment.selectedSegmentIndex, QualityKey);
+	preferences[QualityKey] = @(segment.selectedSegmentIndex);
+	[preferences synchronize];
 }
 
 - (SEL)action
@@ -188,8 +144,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 - (id)initWithIdentifier:(NSString *)identifier
 {
 	if (self == [super init]) {
-		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0.0, 0.0, 300.0, 340.0) color:[[self savedCustomColor:identifier] retain] identifier:identifier delegate:self] autorelease];
-		colorPickerView.backgroundColor = [UIColor blackColor];
+		NKOColorPickerView *colorPickerView = [[[NKOColorPickerView alloc] initWithFrame:CGRectMake(0, 0, 300, 340) color:[[self savedCustomColor:identifier] retain] identifier:identifier delegate:self] autorelease];
+		colorPickerView.backgroundColor = UIColor.blackColor;
 		self.view = colorPickerView;
 		self.navigationItem.title = @"Select Color";
 		self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:0 target:self action:@selector(dismissPicker)] autorelease];
@@ -199,8 +155,6 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 - (void)dismissPicker
 {
-	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-	[dict addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:PREF_PATH]];
     CGFloat hue, sat, bri;
     NSString *identifier = self.identifier;
     BOOL getColor = [self.color getHue:&hue saturation:&sat brightness:&bri alpha:nil];
@@ -208,30 +162,69 @@ static UIColor *savedCustomColor(NSString *identifier)
     	NSString *hueKey = [@"Hue" stringByAppendingString:identifier];
 		NSString *satKey = [@"Sat" stringByAppendingString:identifier];
 		NSString *briKey = [@"Bri" stringByAppendingString:identifier];
-		[dict setObject:@(hue) forKey:hueKey];
-		[dict setObject:@(sat) forKey:satKey];
-		[dict setObject:@(bri) forKey:briKey];
-		BOOL write = [dict writeToFile:PREF_PATH atomically:NO];
-		if (write) {
-			CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), PreferencesChangedNotification, NULL, NULL, YES);
-			[[NSNotificationCenter defaultCenter] postNotificationName:updateCellColorNotification object:nil userInfo:@{IdentifierKey:identifier}];
-		}
+		[preferences setFloat:hue forKey:hueKey];
+		[preferences setFloat:sat forKey:satKey];
+		[preferences setFloat:bri forKey:briKey];
+		[preferences synchronize];
+		[[NSNotificationCenter defaultCenter] postNotificationName:updateCellColorNotification object:nil userInfo:@{ IdentifierKey : identifier }];
+		system("killall Camera");
 	}
-	[[self parentViewController] dismissViewControllerAnimated:YES completion:nil];
+	[self.parentViewController dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end
 
 @implementation CB7PreferenceController
 
+- (void)masterSwitch:(id)value specifier:(PSSpecifier *)spec
+{
+	[self setPreferenceValue:value specifier:spec];
+	[[NSUserDefaults standardUserDefaults] synchronize];
+	system("killall Camera");
+}
+
+- (void)loadView
+{
+	[super loadView];
+	UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 110)];
+	UILabel *tweakLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 16, 320, 50)];
+	tweakLabel.text = @"CamBlur7";
+	tweakLabel.textColor = UIColor.systemOrangeColor;
+	tweakLabel.backgroundColor = UIColor.clearColor;
+	tweakLabel.font = [UIFont fontWithName:@"HelveticaNeue" size:50.0];
+	tweakLabel.textAlignment = 1;
+	tweakLabel.autoresizingMask = 0x12;
+	[headerView addSubview:tweakLabel];
+	[tweakLabel release];
+	UILabel *des = [[UILabel alloc] initWithFrame:CGRectMake(0, 75, 320, 20)];
+	des.text = @"Blurry cool camera interface";
+	des.textColor = UIColor.orangeColor;
+	des.alpha = 0.8;
+	des.font = [UIFont systemFontOfSize:14.0];
+	des.backgroundColor = UIColor.clearColor;
+	des.textAlignment = 1;
+	des.autoresizingMask = 0xa;
+	[headerView addSubview:des];
+	[des release];
+	self.table.tableHeaderView = headerView;
+	[headerView release];
+}
+
 - (id)init
 {
 	if (self == [super init]) {
+		HBAppearanceSettings *appearanceSettings = [[HBAppearanceSettings alloc] init];
+		appearanceSettings.tintColor = UIColor.systemOrangeColor;
+		appearanceSettings.tableViewCellTextColor = UIColor.systemOrangeColor;
+		//appearanceSettings.invertedNavigationBar = YES;
+		self.hb_appearanceSettings = appearanceSettings;
 		UIButton *heart = [[[UIButton alloc] initWithFrame:CGRectZero] autorelease];
-		[heart setImage:[UIImage imageNamed:@"Heart" inBundle:[NSBundle bundleWithPath:@"/Library/PreferenceBundles/CamBlur7Settings.bundle"]] forState:UIControlStateNormal];
+		[heart setImage:[[UIImage imageNamed:@"Heart" inBundle:[NSBundle bundleWithPath:@"/Library/PreferenceBundles/CamBlur7Settings.bundle"]] _flatImageWithColor:UIColor.systemOrangeColor] forState:UIControlStateNormal];
 		[heart sizeToFit];
 		[heart addTarget:self action:@selector(love) forControlEvents:UIControlEventTouchUpInside];
 		self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithCustomView:heart] autorelease];
+		preferences = [[HBPreferences alloc] initWithIdentifier:tweakIdentifier];
+		registerPref(preferences);
 	}
 	return self;
 }
@@ -239,9 +232,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 - (void)love
 {
 	SLComposeViewController *twitter = [[SLComposeViewController composeViewControllerForServiceType:SLServiceTypeTwitter] retain];
-	[twitter setInitialText:@"#CamBlur7 by @PoomSmart is awesome!"];
-	if (twitter != nil)
-		[[self navigationController] presentViewController:twitter animated:YES completion:nil];
+	twitter.initialText = @"#CamBlur7 by @PoomSmart is really awesome!";
+	[self.navigationController presentViewController:twitter animated:YES completion:nil];
 	[twitter release];
 }
 
@@ -251,35 +243,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 	CB7ColorPickerViewController *picker = [[[CB7ColorPickerViewController alloc] initWithIdentifier:identifier] autorelease];
 	UINavigationController *nav = [[[UINavigationController alloc] initWithRootViewController:picker] autorelease];
 	nav.modalPresentationStyle = 2;
-	[[self navigationController] presentViewController:nav animated:YES completion:nil];
-}
-
-- (void)donate:(id)param
-{
-	[[UIApplication sharedApplication] openURL:[NSURL URLWithString:PS_DONATE_URL]];
-}
-
-- (void)twitter:(id)param
-{
-	[[UIApplication sharedApplication] openURL:[NSURL URLWithString:PS_TWITTER_URL]];
-}
-
-- (id)readPreferenceValue:(PSSpecifier *)specifier
-{
-	NSDictionary *settings = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
-	if (!settings[specifier.properties[@"key"]])
-		return specifier.properties[@"default"];
-	return settings[specifier.properties[@"key"]];
-}
- 
-- (void)setPreferenceValue:(id)value specifier:(PSSpecifier *)specifier
-{
-	NSMutableDictionary *defaults = [NSMutableDictionary dictionary];
-	[defaults addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:PREF_PATH]];
-	[defaults setObject:value forKey:specifier.properties[@"key"]];
-	[defaults writeToFile:PREF_PATH atomically:YES];
-	CFStringRef post = (CFStringRef)specifier.properties[@"PostNotification"];
-	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), post, NULL, NULL, YES);
+	[self.navigationController presentViewController:nav animated:YES completion:nil];
 }
 
 - (NSArray *)specifiers
@@ -296,7 +260,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 				}
 			}
 		}
-		_specifiers = [specs copy];
+		_specifiers = specs.copy;
 	}
 	return _specifiers;
 }

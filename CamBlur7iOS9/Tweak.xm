@@ -175,9 +175,9 @@
 {
 	if (!shouldInjectUIKit())
 		return;
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, PreferencesChangedNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
-	loadPrefs();
+	preferences = [[HBPreferences alloc] initWithIdentifier:tweakIdentifier];
+	registerPref(preferences);
+	registerPref_tweak(preferences);
 	if (blur) {
 		openCamera9();
 		%init;
@@ -185,5 +185,4 @@
 			%init(CKCB7BlurView);
 		}
 	}
-	[pool drain];
 }

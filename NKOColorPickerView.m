@@ -84,7 +84,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
     return self;
 }
 
-- (NSBundle *)frontFlashBundle
+- (NSBundle *)camblur7Bundle
 {
 	return [NSBundle bundleWithPath:@"/Library/PreferenceBundles/CamBlur7Settings.bundle"];
 }
@@ -130,7 +130,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
 {
     self.hueSatImage.layer.borderColor = tintColor.CGColor;
     self.gradientView.layer.borderColor = tintColor.CGColor;
-    self.brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self frontFlashBundle]] nko_tintImageWithColor:tintColor];
+    self.brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self camblur7Bundle]] nko_tintImageWithColor:tintColor];
 }
 
 - (void)setColor:(UIColor *)newColor
@@ -297,7 +297,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
 - (UIImageView*)hueSatImage
 {
     if (self->_hueSatImage == nil){
-        self->_hueSatImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"nko_colormap.png" inBundle:[self frontFlashBundle]]];
+        self->_hueSatImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"nko_colormap.png" inBundle:[self camblur7Bundle]]];
         self->_hueSatImage.frame = CGRectMake(NKOPickerViewDefaultMargin,
                                               NKOPickerViewDefaultMargin,
                                               CGRectGetWidth(self.frame) - (NKOPickerViewDefaultMargin*2),
@@ -365,7 +365,7 @@ CGFloat const NKOPickerViewCrossHairshWidthAndHeight    = 38.f;
                                                                                    NKOPickerViewBrightnessIndicatorWidth,
                                                                                    NKOPickerViewBrightnessIndicatorHeight)];
         
-        self->_brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self frontFlashBundle]] nko_tintImageWithColor:[self _defaultTintColor]];
+        self->_brightnessIndicator.image = [[UIImage imageNamed:@"nko_brightness_guide" inBundle:[self camblur7Bundle]] nko_tintImageWithColor:[self _defaultTintColor]];
         self->_brightnessIndicator.backgroundColor = [UIColor clearColor];
         self->_brightnessIndicator.autoresizingMask = UIViewAutoresizingNone;
     }
