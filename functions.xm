@@ -351,24 +351,3 @@ static void CAMModeDialConfigure(CAMModeDial *self)
 		}
 	}
 }
-
-BOOL shouldInjectUIKit()
-{
-	BOOL inject = NO;
-	NSArray *args = [[NSClassFromString(@"NSProcessInfo") processInfo] arguments];
-	NSUInteger count = [args count];
-	if (count != 0) {
-		NSString *executablePath = args[0];
-		if (executablePath) {
-			NSString *processName = [executablePath lastPathComponent];
-			BOOL isApplication = [executablePath rangeOfString:@"/Application"].location != NSNotFound;
-			BOOL isExtension = [executablePath rangeOfString:@".appex"].location != NSNotFound;
-			BOOL isSpringBoard = [processName isEqualToString:@"SpringBoard"];
-			BOOL isMail = [processName isEqualToString:@"MobileMail"];
-			BOOL isPref = [processName isEqualToString:@"Preferences"];
-			BOOL notOkay = isMail || isPref;
-			inject = (isApplication || isSpringBoard) && !notOkay && !isExtension;
-		}
-	}
-	return inject;
-}

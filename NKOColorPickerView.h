@@ -29,6 +29,10 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol NKOColorPickerViewDelegate
+- (void)colorDidChange:(UIColor *)color identifier:(NSString *)identifier;
+@end
+
 
 @interface NKOColorPickerView : UIView
 

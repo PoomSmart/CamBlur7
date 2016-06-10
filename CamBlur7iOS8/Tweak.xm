@@ -208,11 +208,8 @@
 
 %ctor
 {
-	if (!shouldInjectUIKit())
-		return;
-	preferences = [[HBPreferences alloc] initWithIdentifier:tweakIdentifier];
-	registerPref(preferences);
-	registerPref_tweak(preferences);
+	HaveObserver()
+	callback();
 	if (blur) {
 		openCamera8();
 		%init;

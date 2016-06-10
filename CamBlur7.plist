@@ -1,1 +1,1 @@
-{ Filter = { Bundles = ( "com.apple.UIKit" ); }; }
+{ Filter = { Bundles = ( "com.apple.camera", "com.apple.MobileSMS", "com.bitesms", "com.atebits.Tweetie2", "com.toyapagroup.picaboo" ); }; }

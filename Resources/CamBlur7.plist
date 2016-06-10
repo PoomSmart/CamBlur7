@@ -292,7 +292,7 @@
       		<key>label</key>
       		<string>You would need</string>
       		<key>footerText</key>
-      		<string>So that you can experience the tweak in any camera mode.</string>
+      		<string>In order to see transparent bars, camera preview need to be maximized.</string>
       		<key>footerAlignment</key>
       		<integer>1</integer>
       </dict>

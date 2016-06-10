@@ -1,7 +1,7 @@
 GO_EASY_ON_ME = 1
 ARCHS = armv7 arm64
 DEBUG = 0
-PACKAGE_VERSION = 1.6-1
+PACKAGE_VERSION = 1.6-2
 
 include $(THEOS)/makefiles/common.mk
 
@@ -20,7 +20,7 @@ CamBlur7Settings_FILES = CB7PreferenceController.m NKOColorPickerView.m
 CamBlur7Settings_INSTALL_PATH = /Library/PreferenceBundles
 CamBlur7Settings_PRIVATE_FRAMEWORKS = Preferences
 CamBlur7Settings_FRAMEWORKS = CoreGraphics Social UIKit
-CamBlur7Settings_LIBRARIES = cephei cepheiprefs
+CamBlur7Settings_LIBRARIES = cepheiprefs
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 

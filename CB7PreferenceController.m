@@ -7,17 +7,17 @@
 #import <dlfcn.h>
 #import "Common.h"
 #import "../PS.h"
-#import <HBPreferences.h>
+#import "../PSPrefs.x"
+
+DeclarePrefsTools()
 
 NSString *updateCellColorNotification = @"com.PS.CamBlur7.prefs.colorUpdate";
 NSString *IdentifierKey = @"CB7ColorCellIdentifier";
 
-HBPreferences *preferences;
-
 @interface CB7PreferenceController : HBListController
 @end
 
-@interface CB7ColorPickerViewController : UIViewController
+@interface CB7ColorPickerViewController : UIViewController <NKOColorPickerViewDelegate>
 @property (retain) UIColor *color;
 @property (retain) NSString *identifier;
 @end
@@ -31,9 +31,9 @@ static UIColor *savedCustomColor(NSString *identifier)
 	NSString *satKey = [@"Sat" stringByAppendingString:identifier];
 	NSString *briKey = [@"Bri" stringByAppendingString:identifier];
 	CGFloat hue, sat, bri;
-	hue = [preferences floatForKey:hueKey];
-	sat = [preferences floatForKey:satKey];
-	bri = [preferences floatForKey:briKey];
+	hue = floatForKey(hueKey, 1.0);
+	sat = floatForKey(satKey, 1.0);
+	bri = floatForKey(briKey, 1.0);
 	UIColor *color = [UIColor colorWithHue:hue saturation:sat brightness:bri alpha:1];
 	return color;
 }
@@ -52,8 +52,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 - (UIView *)colorCellForIdentifier:(NSString *)identifier
 {
-	UIView *circle = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, 28.0, 28.0)];
-	circle.layer.cornerRadius = 14.0f;
+	UIView *circle = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
+	circle.layer.cornerRadius = 14;
 	circle.backgroundColor = savedCustomColor(identifier);
 	return circle;
 }
@@ -89,7 +89,7 @@ static UIColor *savedCustomColor(NSString *identifier)
 	if (self == [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier specifier:specifier]) {
 		UISegmentedControl *modes = [[[UISegmentedControl alloc] initWithItems:@[@"Default", @"Low"]] autorelease];
 		[modes addTarget:self action:@selector(modeAction:) forControlEvents:UIControlEventValueChanged];
-		modes.selectedSegmentIndex = [preferences integerForKey:QualityKey];
+		modes.selectedSegmentIndex = intForKey(QualityKey, 0);
 		self.accessoryView = modes;
 	}
 	return self;
@@ -97,8 +97,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 - (void)modeAction:(UISegmentedControl *)segment
 {
-	preferences[QualityKey] = @(segment.selectedSegmentIndex);
-	[preferences synchronize];
+	setIntForKey(segment.selectedSegmentIndex, QualityKey);
+	DoPostNotification();
 }
 
 - (SEL)action
@@ -129,6 +129,8 @@ static UIColor *savedCustomColor(NSString *identifier)
 @end
 
 @implementation CB7ColorPickerViewController
+
+HavePrefs()
 
 - (void)colorDidChange:(UIColor *)color identifier:(NSString *)identifier
 {
@@ -162,11 +164,11 @@ static UIColor *savedCustomColor(NSString *identifier)
     	NSString *hueKey = [@"Hue" stringByAppendingString:identifier];
 		NSString *satKey = [@"Sat" stringByAppendingString:identifier];
 		NSString *briKey = [@"Bri" stringByAppendingString:identifier];
-		[preferences setFloat:hue forKey:hueKey];
-		[preferences setFloat:sat forKey:satKey];
-		[preferences setFloat:bri forKey:briKey];
-		[preferences synchronize];
-		[[NSNotificationCenter defaultCenter] postNotificationName:updateCellColorNotification object:nil userInfo:@{ IdentifierKey : identifier }];
+		setFloatForKey(hue, hueKey);
+		setFloatForKey(sat, satKey);
+		setFloatForKey(bri, briKey);
+		DoPostNotification();
+		[NSNotificationCenter.defaultCenter postNotificationName:updateCellColorNotification object:nil userInfo:@{ IdentifierKey : identifier }];
 		system("killall Camera");
 	}
 	[self.parentViewController dismissViewControllerAnimated:YES completion:nil];
@@ -176,10 +178,11 @@ static UIColor *savedCustomColor(NSString *identifier)
 
 @implementation CB7PreferenceController
 
+HavePrefs()
+
 - (void)masterSwitch:(id)value specifier:(PSSpecifier *)spec
 {
 	[self setPreferenceValue:value specifier:spec];
-	[[NSUserDefaults standardUserDefaults] synchronize];
 	system("killall Camera");
 }
 
@@ -216,15 +219,12 @@ static UIColor *savedCustomColor(NSString *identifier)
 		HBAppearanceSettings *appearanceSettings = [[HBAppearanceSettings alloc] init];
 		appearanceSettings.tintColor = UIColor.systemOrangeColor;
 		appearanceSettings.tableViewCellTextColor = UIColor.systemOrangeColor;
-		//appearanceSettings.invertedNavigationBar = YES;
 		self.hb_appearanceSettings = appearanceSettings;
 		UIButton *heart = [[[UIButton alloc] initWithFrame:CGRectZero] autorelease];
 		[heart setImage:[[UIImage imageNamed:@"Heart" inBundle:[NSBundle bundleWithPath:@"/Library/PreferenceBundles/CamBlur7Settings.bundle"]] _flatImageWithColor:UIColor.systemOrangeColor] forState:UIControlStateNormal];
 		[heart sizeToFit];
 		[heart addTarget:self action:@selector(love) forControlEvents:UIControlEventTouchUpInside];
 		self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithCustomView:heart] autorelease];
-		preferences = [[HBPreferences alloc] initWithIdentifier:tweakIdentifier];
-		registerPref(preferences);
 	}
 	return self;
 }
