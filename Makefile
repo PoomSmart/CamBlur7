@@ -1,12 +1,13 @@
 GO_EASY_ON_ME = 1
+TARGET = iphone:latest
 ARCHS = armv7 arm64
 DEBUG = 0
-PACKAGE_VERSION = 1.6-2
+PACKAGE_VERSION = 1.6-3
 
 include $(THEOS)/makefiles/common.mk
 
 AGGREGATE_NAME = CamBlur7
-SUBPROJECTS = CamBlur7iOS7 CamBlur7iOS8 CamBlur7iOS9
+SUBPROJECTS = CamBlur7iOS7 CamBlur7iOS8 CamBlur7iOS9 CamBlur7iOS10
 
 include $(THEOS_MAKE_PATH)/aggregate.mk
 

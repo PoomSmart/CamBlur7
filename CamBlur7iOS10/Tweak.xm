@@ -8,7 +8,7 @@
 #import "../functions.xm"
 
 @interface CAMViewfinderViewController (CB7)
-- (BOOL)cb7_shouldHideBlurryTopBarForMode:(NSInteger)mode device:(NSInteger)device;
+- (_Bool)cb7_shouldHideBlurryTopBarForGraphConfiguration:(CAMCaptureGraphConfiguration *)configuration;
 @end
 
 %group CKCB7BlurView
@@ -41,7 +41,7 @@
 
 %hook CAMModeDial
 
-- (void)setSelectedMode:(NSInteger)mode animated:(BOOL)animated
+- (void)setSelectedMode:(int)mode animated:(BOOL)animated
 {
 	%orig;
 	CAMModeDialConfigure(self);
@@ -83,7 +83,7 @@
 
 %hook CAMBottomBar
 
-- (void)_commonCAMBottomBarInitialization
+- (void)_commonCAMBottomBarInitializationInitWithLayoutStyle:(NSInteger)layoutStyle
 {
 	%orig;
 	createBlurryBottomBar(self);
@@ -99,7 +99,7 @@
 
 %hook CAMViewfinderViewController
 
-- (BOOL)_shouldHideFlipButtonForMode:(NSInteger)mode device:(NSInteger)device
+- (BOOL)_shouldHideFlipButtonForGraphConfiguration:(id)arg1
 {
 	BOOL orig = %orig;
 	if (!orig)
@@ -138,26 +138,28 @@
 }
 
 %new
-- (BOOL)cb7_shouldHideBlurryTopBarForMode:(NSInteger)mode device:(NSInteger)device
+- (_Bool)cb7_shouldHideBlurryTopBarForGraphConfiguration:(CAMCaptureGraphConfiguration *)configuration
 {
 	if (handlePanoTB) {
 		if ([self _isCapturingTimelapse] || [self._captureController isCapturingVideo] || self._topBar.backgroundStyle == 1)
 			return YES;
 	}
-	return [self _shouldHideTopBarForMode:mode device:device];
+	return [self _shouldHideTopBarForGraphConfiguration:configuration];
 }
 
-- (void)_hideControlsForMode:(NSInteger)mode device:(NSInteger)device animated:(BOOL)animated
+- (void)_hideControlsForGraphConfiguration:(CAMCaptureGraphConfiguration *)configuration animated:(BOOL)animated
 {
 	%orig;
-	if (mode == 1 || mode == 2 || (mode == 6 && ![self cb7_shouldHideBlurryTopBarForMode:3 device:device]))
+	NSInteger mode = configuration.mode;
+	if (mode == 1 || mode == 2 || (mode == 6 && ![self cb7_shouldHideBlurryTopBarForGraphConfiguration:configuration]))
 		showBar(YES);
 	else if (mode == 3)
-		showBar(![self _shouldHideTopBarForMode:mode device:device]);
+		showBar(![self _shouldHideTopBarForGraphConfiguration:configuration]);
 }
 
-- (void)_showControlsForMode:(NSInteger)mode device:(NSInteger)device animated:(BOOL)animated
+- (void)_showControlsForGraphConfiguration:(CAMCaptureGraphConfiguration *)configuration animated:(BOOL)animated
 {
+	NSInteger mode = configuration.mode;
 	if ((mode == 1 || mode == 2 || mode == 6) && (handleVideoTB || handleVideoBB))
 		showBar(NO);
 	else if (mode == 3 && (handlePanoTB || handlePanoBB))
@@ -180,7 +182,7 @@
 	HaveObserver()
 	callback();
 	if (blur) {
-		openCamera9();
+		openCamera10();
 		%init;
 		if (!useBackdrop) {
 			%init(CKCB7BlurView);
