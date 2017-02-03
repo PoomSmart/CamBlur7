@@ -57,7 +57,7 @@
 
 %hook CAMElapsedTimeView
 
-- (void)_commonCAMElapsedTimeViewInitialization
+- (void)_commonCAMElapsedTimeViewInitializationWithLayoutStyle:(NSInteger)style
 {
 	%orig;
 	configureShadowLegibility(MSHookIvar<UILabel *>(self, "__timeLabel"));

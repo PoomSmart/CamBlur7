@@ -1,3 +1,4 @@
+#define KILL_PROCESS
 #import <UIKit/UIKit.h>
 #import <Preferences/PSTableCell.h>
 #import <Cephei/HBListController.h>
@@ -169,7 +170,7 @@ HavePrefs()
 		setFloatForKey(bri, briKey);
 		DoPostNotification();
 		[NSNotificationCenter.defaultCenter postNotificationName:updateCellColorNotification object:nil userInfo:@{ IdentifierKey : identifier }];
-		system("killall Camera");
+		killProcess("Camera");
 	}
 	[self.parentViewController dismissViewControllerAnimated:YES completion:nil];
 }
@@ -183,7 +184,7 @@ HavePrefs()
 - (void)masterSwitch:(id)value specifier:(PSSpecifier *)spec
 {
 	[self setPreferenceValue:value specifier:spec];
-	system("killall Camera");
+	killProcess("Camera");
 }
 
 - (void)loadView
@@ -250,7 +251,7 @@ HavePrefs()
 {
 	if (_specifiers == nil) {
 		NSMutableArray *specs = [NSMutableArray arrayWithArray:[self loadSpecifiersFromPlistName:@"CamBlur7" target:self]];
-		if (IPAD) {
+		if (IS_IPAD) {
 			if (dlopen("/Library/MobileSubstrate/DynamicLibraries/FrontFlash.dylib", RTLD_LAZY) != NULL) {
 				for (NSUInteger i = 0; i < specs.count; i++) {
 					PSSpecifier *spec = specs[i];

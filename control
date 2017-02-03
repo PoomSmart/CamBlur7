@@ -1,5 +1,5 @@
 Package: org.thebigboss.camblur7
-Name: CamBlur7
+Name: CamBlur7 (Debug)
 Depends: mobilesubstrate, preferenceloader, org.thebigboss.transparentcamerabar, ws.hbang.common (>= 1.2), firmware (>= 7.0), gsc.still-camera | gsc.front-facing-camera
 Version: 1.6
 Architecture: iphoneos-arm

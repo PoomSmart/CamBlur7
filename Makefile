@@ -1,8 +1,8 @@
 GO_EASY_ON_ME = 1
 TARGET = iphone:latest
 ARCHS = armv7 arm64
-DEBUG = 0
-PACKAGE_VERSION = 1.6-3
+DEBUG = 1
+PACKAGE_VERSION = 1.6.4
 
 include $(THEOS)/makefiles/common.mk
 

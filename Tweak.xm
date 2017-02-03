@@ -3,7 +3,9 @@
 
 %ctor
 {
-	if (isiOS9Up)
+	if (isiOS10Up)
+		dlopen("/Library/Application Support/CamBlur7/CamBlur7iOS10.dylib", RTLD_LAZY);
+	else if (isiOS9)
 		dlopen("/Library/Application Support/CamBlur7/CamBlur7iOS9.dylib", RTLD_LAZY);
 	else if (isiOS8)
 		dlopen("/Library/Application Support/CamBlur7/CamBlur7iOS8.dylib", RTLD_LAZY);
